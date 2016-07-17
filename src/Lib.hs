@@ -90,7 +90,8 @@ module Lib
 
       session :: [Input] -> Network -> [Output] -> Double -> Int -> Network
       session inputs network labels alpha epochs =
-        foldl' iter network [0..n * epochs]
+        let n = length inputs - 1
+        in foldl' iter network [0..n * epochs]
         where
           iter net i =
             let n = length inputs - 1

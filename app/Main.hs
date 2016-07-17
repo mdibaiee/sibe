@@ -11,7 +11,7 @@ import Debug.Trace
 
 main :: IO ()
 main =
-  let learning_rate = 0.5
+  let learning_rate = 0.01
       ih = randomLayer 0 (2, 10)
       ho = randomLayer 1 (10, 1)
       network = ih :- O ho
@@ -21,7 +21,7 @@ main =
 
       labels = [vector [1], vector [0], vector [1], vector [0]]
 
-      updated_network = session inputs network labels 0.01 10000
+      updated_network = session inputs network labels learning_rate 100
       -- updated_network = train (head inputs) network (head labels) 0.5
-      results = map (\x -> forward x updated_network) inputs
+      results = map (`forward` updated_network) inputs
   in print results
