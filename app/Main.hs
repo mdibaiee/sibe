@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Sibe
 import Numeric.LinearAlgebra
 import Data.List
 import Debug.Trace

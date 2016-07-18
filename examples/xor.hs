@@ -1,5 +1,5 @@
 module Main where
-  import Lib
+  import Sibe
   import Numeric.LinearAlgebra
   import Data.List
   import Debug.Trace
@@ -21,12 +21,11 @@ module Main where
 
         updated_network = session inputs network labels learning_rate (iterations, epochs)
         results = map (`forward` updated_network) inputs
-        rounded = map (map round) $ map toList results
-    in sequence [putStrLn "",
-                 putStrLn $ "inputs: " ++ show inputs,
+        rounded = map (map round . toList) results
+    in sequence [putStrLn $ "inputs: " ++ show inputs,
                  putStrLn $ "labels: " ++ show labels,
                  putStrLn $ "learning rate: " ++ show learning_rate,
                  putStrLn $ "iterations/epochs: " ++ show (iterations, epochs),
-                 putStrLn $ "...",
+                 putStrLn "...",
                  putStrLn $ "rounded result: " ++ show rounded,
                  putStrLn $ "actual result: " ++ show results]

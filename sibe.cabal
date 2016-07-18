@@ -1,22 +1,24 @@
 name:                sibe
 version:             0.1.0.0
 synopsis:            Initial project template from stack
-description:         Please see README.md
-homepage:            https://github.com/githubuser/sibe#readme
-license:             BSD3
+description:         Haskell Machine Learning
+homepage:            https://github.com/mdibaiee/sibe
+license:             GPL-3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
-category:            Web
+author:              Mahdi Dibaiee
+maintainer:          mdibaiee@aol.com
+copyright:           2016 Mahdi Dibaiee
+category:            Web, Machine Learning, Data Science
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     Sibe
   build-depends:       base >= 4.7 && < 5
+                     , hmatrix
+                     , random
   default-language:    Haskell2010
 
 executable sibe-exe
@@ -25,6 +27,7 @@ executable sibe-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , sibe
+                     , hmatrix
   default-language:    Haskell2010
 
 executable example-xor
@@ -33,6 +36,7 @@ executable example-xor
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , sibe
+                     , hmatrix
   default-language:    Haskell2010
 
 test-suite sibe-test
@@ -41,9 +45,10 @@ test-suite sibe-test
   main-is:             Spec.hs
   build-depends:       base
                      , sibe
+                     , hmatrix
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/sibe
+  location: https://github.com/mdibaiee/sibe

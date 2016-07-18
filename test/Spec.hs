@@ -1,2 +1,8 @@
-main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+module Main where
+  import System.Exit (exitFailure)
+
+  import Sibe
+
+  main = do
+    putStrLn "Hey"
+    exitFailure

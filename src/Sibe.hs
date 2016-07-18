@@ -3,7 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Lib
+module Sibe
     (Network(..),
      Layer,
      Input,
@@ -15,7 +15,6 @@ module Lib
      shuffle,
     ) where
       import Numeric.LinearAlgebra
-      import Control.Monad.Random
       import System.Random
       import Debug.Trace
       import Data.List (foldl', sortBy)
