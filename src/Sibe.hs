@@ -10,6 +10,7 @@ module Sibe
      Output,
      forward,
      randomLayer,
+     randomNetwork,
      train,
      session,
      shuffle,
@@ -44,6 +45,13 @@ module Sibe
         let weights = uniformSample seed wr $ replicate wc (-1, 1)
             biases  = randomVector seed Uniform wc * 2 - 1
         in L biases weights
+
+      randomNetwork :: Seed -> Int -> [Int] -> Int -> Network
+      randomNetwork seed input [] output =
+        O $ randomLayer seed (input, output)
+      randomNetwork seed input (h:hs) output =
+        randomLayer seed (input, h) :-
+        randomNetwork (seed + 1) h hs output
 
       logistic :: Double -> Double
       logistic x = 1 / (1 + exp (-x))
