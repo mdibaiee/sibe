@@ -37,8 +37,8 @@ module Sibe
       runLayer input (L !biases !weights) = input <# weights + biases
 
       forward :: Input -> Network -> Output
-      forward input (O l) = cmap logistic $ runLayer input l
-      forward input (l :- n) = forward (cmap logistic $ runLayer input l) n
+      forward input (O l) = logistic $ runLayer input l
+      forward input (l :- n) = forward (logistic $ runLayer input l) n
 
       randomLayer :: Seed -> (Int, Int) -> Layer
       randomLayer seed (wr, wc) =
@@ -53,11 +53,11 @@ module Sibe
         randomLayer seed (input, h) :-
         randomNetwork (seed + 1) h hs output
 
-      logistic :: Double -> Double
+      logistic :: Vector Double -> Vector Double
       logistic x = 1 / (1 + exp (-x))
 
-      logistic' :: Double -> Double
-      logistic' x = logistic x / max 1e-10 (1 - logistic x)
+      logistic' :: Vector Double -> Vector Double
+      logistic' x = logistic x * (1 - logistic x)
 
       train :: Input
             -> Network
@@ -69,9 +69,9 @@ module Sibe
           run :: Input -> Network -> (Network, Vector Double)
           run input (O l@(L biases weights)) =
             let y = runLayer input l
-                o = cmap logistic y
+                o = logistic y
                 delta = o - target
-                de = delta * cmap logistic' o
+                de = delta * logistic' y
 
                 biases'  = biases  - scale alpha de
                 weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly
@@ -83,10 +83,10 @@ module Sibe
             in (O layer, pass)
           run input (l@(L biases weights) :- n) =
             let y = runLayer input l
-                o = cmap logistic y
+                o = logistic y
                 (n', delta) = run o n
 
-                de = delta * cmap logistic' o
+                de = delta * logistic' y
 
                 biases'  = biases  - scale alpha de
                 weights' = weights - scale alpha (input `outer` de)
