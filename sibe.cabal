@@ -19,6 +19,7 @@ library
   build-depends:       base >= 4.7 && < 5
                      , hmatrix
                      , random
+                     , deepseq
   default-language:    Haskell2010
 
 executable sibe-exe
