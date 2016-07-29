@@ -4,7 +4,11 @@ module Sibe.NaiveBayes
    createDocuments,
    initialize,
    calculate,
-   determine
+   determine,
+   ordNub,
+   accuracy,
+   precision,
+   recall,
   )
   where
     import Data.List
@@ -63,3 +67,30 @@ module Sibe.NaiveBayes
         go _ [] = []
         go s (x:xs) = if x `Set.member` s then go s xs
                                           else x : go (Set.insert x s) xs
+
+    accuracy :: [(Int, Int)] -> Int
+    accuracy results =
+      let correct = filter (uncurry (==)) results
+      in round $ genericLength correct / genericLength results * 100
+
+    recall :: [(Int, Int)] -> Int
+    recall results =
+      let classes = ordNub (map fst results)
+          s = sum (map rec classes) / genericLength results
+      in round $ s * 100
+      where
+        rec a =
+          let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
+              y = genericLength $ filter (\(c, r) -> c == a) results
+          in t / y
+
+    precision :: [(Int, Int)] -> Int
+    precision results =
+      let classes = ordNub (map fst results)
+          s = sum (map prec classes) / genericLength results
+      in round $ s * 100
+      where
+        prec a =
+          let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
+              y = genericLength $ filter (\(c, r) -> r == a) results
+          in t / y

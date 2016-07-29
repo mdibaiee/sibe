@@ -6,24 +6,24 @@ module Main
     import Data.List
     import Data.Maybe
     import Debug.Trace
+    import Data.List.Split
 
     main = do
-      dataset <- readFile "examples/naivebayes-doc-classifier/data-reuters"
-      test <- readFile "examples/naivebayes-doc-classifier/data-reuters-test"
+      dataset <- readFile "examples/doc-classifier-data/data-reuters"
+      test <- readFile "examples/doc-classifier-data/data-reuters-test"
 
-      classes <- map (filter (/= ' ')) . lines <$> readFile "examples/naivebayes-doc-classifier/data-classes"
+      classes <- map (filter (/= ' ')) . lines <$> readFile "examples/doc-classifier-data/data-classes"
 
       let intClasses = [0..length classes - 1]
           documents = createDocuments classes dataset
           testDocuments = createDocuments classes test
           nb = initialize documents
 
-      let testResults (Document text c) =
-            let r = determine text nb intClasses documents
-            in trace (classes !! c ++ " ~ " ++ classes !! r) c == r
+          results = map (\(Document text c) -> (c, determine text nb intClasses documents)) testDocuments
 
-      let results = map testResults testDocuments
+      let showResults (c, r) = putStrLn (classes !! c ++ " ~ " ++ classes !! r)
+      mapM_ showResults results
 
-      putStr "Accuracy: "
-      putStr . show . round $ (genericLength (filter (==True) results) / genericLength results) * 100
-      putStrLn "%"
+      putStrLn $ "Recall: " ++ show (recall results) ++ "%"
+      putStrLn $ "Precision: " ++ show (precision results) ++ "%"
+      putStrLn $ "Accuracy: " ++ show (accuracy results) ++ "%"

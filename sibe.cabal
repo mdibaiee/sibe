@@ -50,6 +50,7 @@ executable example-naivebayes-doc-classifier
                      , sibe
                      , hmatrix
                      , containers
+                     , split
   default-language:    Haskell2010
 
 test-suite sibe-test

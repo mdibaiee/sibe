@@ -26,6 +26,8 @@ module Main where
         network = session inputs rnetwork labels learning_rate (iterations, epochs)
 
         -- run inputs through the trained network
+        -- note: here we are using the examples in the training dataset to test the network,
+        --       this is here just to demonstrate the way the library works, you should not do this
         results = map (`forward` network) inputs
 
         -- compute the new cost

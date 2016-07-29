@@ -1,0 +1,3 @@
+[submodule "examples/doc-classifier-data"]
+	path = examples/doc-classifier-data
+	url = git@github.com:mdibaiee/doc-classifier-data
