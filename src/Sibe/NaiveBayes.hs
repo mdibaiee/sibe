@@ -9,6 +9,7 @@ module Sibe.NaiveBayes
    accuracy,
    precision,
    recall,
+   fmeasure,
   )
   where
     import Data.List
@@ -74,24 +75,27 @@ module Sibe.NaiveBayes
       let correct = filter (uncurry (==)) results
       in round $ genericLength correct / genericLength results * 100
 
-    recall :: [(Int, Int)] -> Int
+    recall :: [(Int, Int)] -> Double
     recall results =
       let classes = ordNub (map fst results)
-          s = sum (map rec classes) / genericLength results
-      in round $ s * 100
+          s = sum (map rec classes) / genericLength classes
+      in s * 100
       where
         rec a =
           let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
               y = genericLength $ filter (\(c, r) -> c == a) results
           in t / y
 
-    precision :: [(Int, Int)] -> Int
+    precision :: [(Int, Int)] -> Double
     precision results =
       let classes = ordNub (map fst results)
-          s = sum (map prec classes) / genericLength results
-      in round $ s * 100
+          s = sum (map prec classes) / genericLength classes
+      in s * 100
       where
         prec a =
           let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
               y = genericLength $ filter (\(c, r) -> r == a) results
           in t / y
+
+    fmeasure :: Double -> Double -> Double
+    fmeasure r p = (2 * p * r) / (p + r)

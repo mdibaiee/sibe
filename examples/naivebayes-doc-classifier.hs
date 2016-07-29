@@ -24,6 +24,11 @@ module Main
       let showResults (c, r) = putStrLn (classes !! c ++ " ~ " ++ classes !! r)
       mapM_ showResults results
 
+      let showAccuracy (c, r) =
+            print $ genericLength (filter (\(h, j) -> h == j && h == c) results) / genericLength results
+      mapM_ showAccuracy results
+
       putStrLn $ "Recall: " ++ show (recall results) ++ "%"
       putStrLn $ "Precision: " ++ show (precision results) ++ "%"
+      putStrLn $ "F Measure: " ++ show (fmeasure (precision results) (recall results))
       putStrLn $ "Accuracy: " ++ show (accuracy results) ++ "%"
