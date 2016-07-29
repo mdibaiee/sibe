@@ -16,6 +16,7 @@ module Sibe.NaiveBayes
     import qualified Data.Set as Set
     import Data.List.Split
     import Data.Maybe
+    import Control.Arrow ((&&&))
     type Class = Int
 
     data Document = Document { text :: String
@@ -54,7 +55,7 @@ module Sibe.NaiveBayes
 
     createDocuments classes content =
       let splitted = splitOn (replicate 10 '-' ++ "\n") content
-          pairs = map (\a -> ((head . lines) a, (concat . tail . lines) a)) splitted
+          pairs = map ((head . lines) &&& (concat . tail . lines)) splitted
           documents = map (\(topic, text) -> Document text (fromJust $ elemIndex topic classes)) pairs
       in documents
 
