@@ -17,18 +17,16 @@ module Main
       let intClasses = [0..length classes - 1]
           documents = createDocuments classes dataset
           testDocuments = createDocuments classes test
+          devTestDocuments = take 20 testDocuments
           nb = initialize documents
 
           results = map (\(Document text c) -> (c, determine text nb intClasses documents)) testDocuments
+          -- results = map (\(Document text c) -> (c, determine text nb intClasses documents)) devTestDocuments
 
       let showResults (c, r) = putStrLn (classes !! c ++ " ~ " ++ classes !! r)
       mapM_ showResults results
 
-      let showAccuracy (c, r) =
-            print $ genericLength (filter (\(h, j) -> h == j && h == c) results) / genericLength results
-      mapM_ showAccuracy results
-
-      putStrLn $ "Recall: " ++ show (recall results) ++ "%"
-      putStrLn $ "Precision: " ++ show (precision results) ++ "%"
+      putStrLn $ "Recall: " ++ show (recall results)
+      putStrLn $ "Precision: " ++ show (precision results)
       putStrLn $ "F Measure: " ++ show (fmeasure (precision results) (recall results))
-      putStrLn $ "Accuracy: " ++ show (accuracy results) ++ "%"
+      putStrLn $ "Accuracy: " ++ show (accuracy results)

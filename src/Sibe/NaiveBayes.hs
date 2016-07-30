@@ -70,16 +70,16 @@ module Sibe.NaiveBayes
         go s (x:xs) = if x `Set.member` s then go s xs
                                           else x : go (Set.insert x s) xs
 
-    accuracy :: [(Int, Int)] -> Int
+    accuracy :: [(Int, Int)] -> Double
     accuracy results =
       let correct = filter (uncurry (==)) results
-      in round $ genericLength correct / genericLength results * 100
+      in genericLength correct / genericLength results
 
     recall :: [(Int, Int)] -> Double
     recall results =
       let classes = ordNub (map fst results)
           s = sum (map rec classes) / genericLength classes
-      in s * 100
+      in s
       where
         rec a =
           let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
@@ -90,12 +90,15 @@ module Sibe.NaiveBayes
     precision results =
       let classes = ordNub (map fst results)
           s = sum (map prec classes) / genericLength classes
-      in s * 100
+      in s
       where
         prec a =
           let t = genericLength $ filter (\(c, r) -> c == r && c == a) results
               y = genericLength $ filter (\(c, r) -> r == a) results
-          in t / y
+          in
+            if y == 0
+              then 0
+              else t / y
 
     fmeasure :: Double -> Double -> Double
     fmeasure r p = (2 * p * r) / (p + r)
