@@ -17,8 +17,10 @@ module Sibe
      train,
      session,
      shuffle,
-     logistic,
-     logistic',
+     sigmoid,
+     sigmoid',
+     relu,
+     relu',
      crossEntropy,
      genSeed,
      replaceVector
@@ -88,11 +90,17 @@ module Sibe
         randomLayer seed (input, h) a :-
         randomNetwork (seed + 1) h hs output
 
-      logistic :: Vector Double -> Vector Double
-      logistic x = 1 / (1 + exp (-x))
+      sigmoid :: Vector Double -> Vector Double
+      sigmoid x = 1 / max (1 + exp (-x)) 1e-10
 
-      logistic' :: Vector Double -> Vector Double
-      logistic' x = logistic x * (1 - logistic x)
+      sigmoid' :: Vector Double -> Vector Double
+      sigmoid' x = sigmoid x * (1 - sigmoid x)
+
+      relu :: Vector Double -> Vector Double
+      relu x = log (max (1 + exp x) 1e-10)
+
+      relu' :: Vector Double -> Vector Double
+      relu' = sigmoid
 
       crossEntropy :: Output -> Output -> Double
       crossEntropy output target =
@@ -100,7 +108,7 @@ module Sibe
             n = fromIntegral (length pairs)
         in (-1 / n) * sum (map f pairs)
         where
-          f (a, y) = y * log a + (1 - y) * log (1 - a)
+          f (a, y) = y * log (max 1e-10 a) + (1 - y) * log (max (1 - a) 1e-10)
 
       train :: Input
             -> Network
@@ -114,8 +122,8 @@ module Sibe
             let y = runLayer input l
                 o = fn y
                 delta = o - target
-                -- de = delta * fn' y -- quadratic cost
-                de = delta -- cross entropy cost
+                de = delta * fn' y
+                -- de = delta -- cross entropy cost
 
                 biases'  = biases  - scale alpha de
                 weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly
@@ -174,3 +182,6 @@ module Sibe
           rrow index (x:xs)
             | index == index = value:xs
             | otherwise = x : rrow (index + 1) xs
+
+      clip :: Double -> (Double, Double) -> Double
+      clip x (l, u) = min u (max l x)

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+PROG==geniconvert
+VIEW==open
+
+stack build --profile

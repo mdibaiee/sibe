@@ -7,7 +7,7 @@ module Main where
   main = do
     let learning_rate = 0.5
         (iterations, epochs) = (2, 1000)
-        a = (logistic, logistic')
+        a = (sigmoid, sigmoid')
         rnetwork = randomNetwork 0 2 [(8, a)] (1, a) -- two inputs, 8 nodes in a single hidden layer, 1 output
 
         inputs = [vector [0, 1], vector [1, 0], vector [1, 1], vector [0, 0]]

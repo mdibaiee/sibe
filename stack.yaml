@@ -41,7 +41,10 @@ packages:
     commit: 42a88fbcb6bd1d2c4dc18fae5e962bd34fb316a1
   subdirs:
     - packages/base
-- '.'
+- .
+- http://hackage.haskell.org/package/containers-0.5.7.1/containers-0.5.7.1.tar.gz
+- http://hackage.haskell.org/package/text-1.2.2.1/text-1.2.2.1.tar.gz
+- http://hackage.haskell.org/package/stemmer-0.5.2/stemmer-0.5.2.tar.gz
 
 # Dependency packages to be pulled from upstream that are not in the resolver
 # (e.g., acme-missiles-0.3)
@@ -70,3 +73,5 @@ extra-package-dbs: []
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+
+system-ghc: false
