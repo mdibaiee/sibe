@@ -14,26 +14,20 @@ module Main
       test <- readFile "examples/doc-classifier-data/data-reuters-test"
 
       classes <- map (filter (/= ' ')) . lines <$> readFile "examples/doc-classifier-data/data-classes"
+      sws <- lines <$> readFile "examples/stopwords"
 
       let intClasses = [0..length classes - 1]
-      -- let intClasses = [0, 1]
-          documents = cleanDocuments $ createDocuments classes dataset
-          -- documents = [Document "Chinese Beijing Chinese" 0,
-          --              Document "Chinese Chinese Shanghai" 0,
-          --              Document "Chinese Macao" 0,
-          --              Document "Japan Tokyo Chinese" 1]
-          -- testDocuments = [Document "Chinese Chinese Chinese Japan Tokyo" 0]
+          documents = cleanDocuments $ removeWords sws $ createDocuments classes dataset
           testDocuments = cleanDocuments $ createDocuments classes test
           devTestDocuments = take 30 testDocuments
-          -- devTestDocuments = [Document "Chinese Chinese Chinese Tokyo Japan" 0]
           nb = train documents intClasses
 
           results = map (\(Document text c) -> (c, run text nb)) testDocuments
           -- results = map (\(Document text c) -> (c, run text nb)) devTestDocuments
 
-      -- print (text $ head documents)
+      print (text $ head documents)
 
-      let showResults (c, r) = putStrLn (classes !! c ++ " ~ " ++ classes !! r)
+      let showResults (c, (r, confidence)) = putStrLn (classes !! c ++ " ~ " ++ classes !! r)
       mapM_ showResults results
 
       putStrLn $ "Recall: " ++ show (recall results)
