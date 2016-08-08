@@ -3,6 +3,7 @@ module Sibe.NaiveBayes
    NB(..),
    train,
    run,
+   session,
    ordNub,
    accuracy,
    precision,
@@ -91,22 +92,30 @@ module Sibe.NaiveBayes
               grams = map (\(i, w) -> concat . intersperse "_" $ w:((take (n - 1) . drop (i+1)) ws)) pairs
           in unwords ("<b>":grams)
 
+    session :: [Document] -> NB -> [(Class, (Class, Double))]
+    session docs nb =
+      let results = map (\(Document text c) -> (c, run text nb)) docs
+      in results
+
     run :: String -> NB -> (Class, Double)
     run txt (NB documents classes vocabulary megadoc cd cw cgram) =
       let scores = map (score . fst) classes
           index = argmax scores
           m = maximum scores
-          confidence = m / sum scores
-      in (index, 0)
+      in (index, m)
       where
         score c =
           let prior = snd (classes !! c)
 
           -- below is the formula according to Multinominal Naive Bayes, but it seems
-          -- using a uniform prior probability seems to work better
+          -- using a uniform prior probability seems to work better when working with imbalanced
+          -- training datasets, instead, we help rare classes get higher scores using
+          -- alpha = (1 - prior * ALPHA)
           -- in prior * product (map (prob c) (words txt))
 
-          in product (map (prob c) (words txt))
+              alpha = 1 - (log 1 + prior)
+
+          in alpha * product (map (prob c) (words txt))
 
         prob c w =
           let tctM = find ((== w) . fst) (snd (cw !! c))
