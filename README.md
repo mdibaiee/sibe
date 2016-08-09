@@ -36,6 +36,13 @@ module Main where
 
 See other examples:
 ```
+# Simplest case of a neural network
 stack exec example-xor
-stack exec example-naivebayes-doc-classifier
+
+# Naive Bayes document classifier, using Reuters dataset, achieves ~62% accuracy
+# using Porter stemming, stopword elimination and a few custom techniques.
+# the dataset is imbalanced which causes the classifier to be biased towards some classes (earn, acq, ...)
+# N-Grams don't seem to help us much here (or maybe my implementation is wrong!), using bigrams increases
+# accuracy, while decreasing F-Measure slightly.
+stack exec example-naivebayes-doc-classifier -- --verbose
 ```

@@ -25,7 +25,7 @@ module Sibe.NaiveBayes
     import Data.Maybe
     import Control.Arrow ((&&&))
     import Text.Regex.PCRE
-    import Data.Char (isSpace, isNumber)
+    import Data.Char (isSpace, isNumber, toLower)
     import NLP.Stemmer
 
     type Class = Int;
@@ -110,10 +110,10 @@ module Sibe.NaiveBayes
           -- below is the formula according to Multinominal Naive Bayes, but it seems
           -- using a uniform prior probability seems to work better when working with imbalanced
           -- training datasets, instead, we help rare classes get higher scores using
-          -- alpha = (1 - prior * ALPHA)
+          -- alpha = (1 - prior * ALPHA), we use ALPHA = 1 here
           -- in prior * product (map (prob c) (words txt))
 
-              alpha = 1 - (log 1 + prior)
+              alpha = 1 - prior
 
           in alpha * product (map (prob c) (words txt))
 
@@ -145,7 +145,8 @@ module Sibe.NaiveBayes
           spacify = foldl (\acc x -> replace x ' ' acc) puncs [',', '/', '-', '\n', '\r']
           stemmed = unwords $ map (stem Porter) (words spacify)
           nonumber = filter (not . isNumber) stemmed
-      in (unwords . words) nonumber
+          lower = map toLower nonumber
+      in (unwords . words) lower -- remove unnecessary spaces
       where
         trim = f . f
           where
