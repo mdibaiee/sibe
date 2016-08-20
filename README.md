@@ -39,7 +39,7 @@ See other examples:
 # Simplest case of a neural network
 stack exec example-xor
 
-# Naive Bayes document classifier, using Reuters dataset, achieves ~62% accuracy
+# Naive Bayes document classifier, using Reuters dataset
 # using Porter stemming, stopword elimination and a few custom techniques.
 # The dataset is imbalanced which causes the classifier to be biased towards some classes (earn, acq, ...)
 # to workaround the imbalanced dataset problem, there is a --top-ten option which classifies only top 10 popular
