@@ -14,6 +14,7 @@ module Sibe.NaiveBayes
    cleanText,
    cleanDocuments,
    ngram,
+   ngramText,
    removeWords,
    removeStopwords,
   )
@@ -84,13 +85,14 @@ module Sibe.NaiveBayes
 
     ngram :: Int -> [Document] -> [Document]
     ngram n documents =
-      map (\(Document text c) -> Document (helper text) c) documents
-      where
-        helper text =
-          let ws = words text
-              pairs = zip [0..] ws
-              grams = map (\(i, w) -> concat . intersperse "_" $ w:((take (n - 1) . drop (i+1)) ws)) pairs
-          in unwords ("<b>":grams)
+      map (\(Document text c) -> Document (ngramText n text) c) documents
+
+    ngramText :: Int -> String -> String
+    ngramText n text =
+      let ws = words text
+          pairs = zip [0..] ws
+          grams = map (\(i, w) -> concat . intersperse "_" $ w:((take (n - 1) . drop (i+1)) ws)) pairs
+      in unwords ("<b>_":grams)
 
     session :: [Document] -> NB -> [(Class, (Class, Double))]
     session docs nb =
@@ -102,10 +104,10 @@ module Sibe.NaiveBayes
       let scores = map (score . fst) classes
           index = argmax scores
           m = maximum scores
-      in (index, m)
+      in (fst (classes !! index), m)
       where
         score c =
-          let prior = snd (classes !! c)
+          let prior = snd (fromJust $ find ((==c) . fst) classes)
 
           -- below is the formula according to Multinominal Naive Bayes, but it seems
           -- using a uniform prior probability seems to work better when working with imbalanced
@@ -118,11 +120,13 @@ module Sibe.NaiveBayes
           in alpha * product (map (prob c) (words txt))
 
         prob c w =
-          let tctM = find ((== w) . fst) (snd (cw !! c))
+          let fcw  = fromJust $ find ((==c) . fst) cw
+              fcg  = fromJust $ find ((==c) . fst) cgram
+              tctM = find ((== w) . fst) (snd fcw)
               tct  = if isJust tctM then (snd . fromJust) tctM else 0
-              cvoc = sum $ map snd (snd (cw !! c))
+              cvoc = sum $ map snd (snd fcw)
               voc  = vocabulary
-              gram = find ((==w) . last . splitOn "_" . fst) (snd (cgram !! c))
+              gram = find ((==w) . last . splitOn "_" . fst) (snd fcg)
               pg   = if isJust gram then (snd . fromJust) gram else 0
           -- in realToFrac (tct * pg + 1) / realToFrac (cvoc + voc) -- uncomment to enable ngrams
           in realToFrac (tct + 1) / realToFrac (cvoc + voc)
