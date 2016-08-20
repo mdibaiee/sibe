@@ -43,7 +43,7 @@ stack exec example-xor
 # using Porter stemming, stopword elimination and a few custom techniques.
 # The dataset is imbalanced which causes the classifier to be biased towards some classes (earn, acq, ...)
 # to workaround the imbalanced dataset problem, there is a --top-ten option which classifies only top 10 popular
-# classes, with evenly split datasets (100 for each)
+# classes, with evenly split datasets (100 for each), this increases F Measure significantly, along with ~10% of improved accuracy
 # N-Grams don't seem to help us much here (or maybe my implementation is wrong!), using bigrams increases
 # accuracy, while decreasing F-Measure slightly.
 stack exec example-naivebayes-doc-classifier -- --verbose
