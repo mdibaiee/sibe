@@ -2,9 +2,6 @@ sibe
 ====
 A simple Machine Learning library.
 
-notMNIST dataset, cross-entropy loss, learning rate decay and sgd:
-![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)
-
 ## Simple neural network
 ```haskell
     let a = (sigmoid, sigmoid') -- activation function
@@ -60,3 +57,8 @@ stack exec example-notmnist
 stack exec example-naivebayes-doc-classifier -- --verbose
 stack exec example-naivebayes-doc-classifier -- --verbose --top-ten
 ```
+
+### notMNIST
+
+notMNIST dataset, cross-entropy loss, learning rate decay and sgd ([`notmnist.hs`](https://github.com/mdibaiee/sibe/blob/master/examples/notmnist.hs)):
+![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)
