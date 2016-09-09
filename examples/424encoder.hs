@@ -6,11 +6,20 @@ module Main where
   import Data.Default.Class
 
   main = do
-    let a = (sigmoid, sigmoid')
-        rnetwork = randomNetwork 0 (-1, 1) 2 [(2, a)] (1, a) -- two inputs, 8 nodes in a single hidden layer, 1 output
+    let alpha = 0.5
+        epochs = 1000
+        a = (sigmoid, sigmoid')
+        rnetwork = randomNetwork 0 (-0.1, 0.1) 4 [(2, a)] (4, a)
 
-        inputs = [vector [0, 1], vector [1, 0], vector [1, 1], vector [0, 0]]
-        labels = [vector [1], vector [1], vector [0], vector [0]]
+        inputs = [vector [1, 0, 0, 0],
+                  vector [0, 1, 0, 0],
+                  vector [0, 0, 1, 0],
+                  vector [0, 0, 0, 1]]
+
+        labels = [vector [1, 0, 0, 0],
+                  vector [0, 1, 0, 0],
+                  vector [0, 0, 1, 0],
+                  vector [0, 0, 0, 1]]
 
         session = def { network = rnetwork
                       , learningRate = 0.5
@@ -19,7 +28,7 @@ module Main where
                       , test = zip inputs labels
                       } :: Session
 
-        initialCost = crossEntropy session
+    let initialCost = crossEntropy session
 
     newsession <- run gd session
 
@@ -31,8 +40,8 @@ module Main where
     putStrLn "parameters: "
     putStrLn $ "- inputs: " ++ show inputs
     putStrLn $ "- labels: " ++ show labels
-    putStrLn $ "- learning rate: " ++ show (learningRate session)
-    putStrLn $ "- epochs: " ++ show (epochs session)
+    putStrLn $ "- learning rate: " ++ show alpha
+    putStrLn $ "- epochs: " ++ show epochs
     putStrLn $ "- initial cost (cross-entropy): " ++ show initialCost
     putStrLn "results: "
     putStrLn $ "- actual result: " ++ show results

@@ -1,6 +1,7 @@
 module Main
   where
     -- import Sibe
+    import Sibe.NLP
     import Sibe.NaiveBayes
     import Text.Printf
     import Data.List
@@ -28,14 +29,14 @@ module Main
           documents = cleanDocuments . removeWords sws $ createDocuments classes dataset
           testDocuments = cleanDocuments $ createDocuments classes test
 
-          nb = train documents intClasses
+          nb = initialize documents intClasses
 
           -- top-ten
           topClasses = take 10 . reverse $ sortBy (compare `on` (length . snd)) (cd nb)
           filtered = map (\(c, ds) -> (c, take 100 ds)) topClasses
           filteredClasses = map fst filtered
           ttDocs = concatMap snd filtered
-          ttNB = train ttDocs filteredClasses
+          ttNB = initialize ttDocs filteredClasses
 
           ttTestDocuments = filter ((`elem` filteredClasses) . c) . cleanDocuments $ createDocuments classes test
 

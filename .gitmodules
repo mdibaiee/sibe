@@ -1,3 +1,6 @@
 [submodule "examples/doc-classifier-data"]
 	path = examples/doc-classifier-data
 	url = git@github.com:mdibaiee/doc-classifier-data
+[submodule "examples/notMNIST"]
+	path = examples/notMNIST
+	url = git@github.com:mdibaiee/notMNIST

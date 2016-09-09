@@ -15,22 +15,37 @@ module Sibe
      saveNetwork,
      loadNetwork,
      train,
-     session,
-     shuffle,
+     gd,
+     sgd,
+     run,
      sigmoid,
      sigmoid',
+     softmax,
+     softmax',
+     one,
      relu,
      relu',
      crossEntropy,
      genSeed,
-     replaceVector
+     replaceVector,
+     Session(..),
+     accuracy,
+     learningRateDecay
     ) where
       import Numeric.LinearAlgebra
       import System.Random
+      import System.Random.Shuffle
       import Debug.Trace
-      import Data.List (foldl', sortBy)
+      import Data.List (foldl', sortBy, genericLength, permutations)
       import System.IO
       import Control.DeepSeq
+      import Control.Monad
+      import qualified Data.Vector.Storable as V
+      import Data.Default.Class
+      import System.Exit
+
+      import qualified Graphics.Rendering.Chart.Easy as Chart
+      import Graphics.Rendering.Chart.Backend.Cairo
 
       type LearningRate = Double
       type Input = Vector Double
@@ -48,7 +63,32 @@ module Sibe
       data Network = O Layer
                    | Layer :- Network
                    deriving (Show)
+                   
       infixr 5 :-
+
+      data Session = Session  { network      :: Network
+                              , training     :: [(Vector Double, Vector Double)]
+                              , test         :: [(Vector Double, Vector Double)]
+                              , learningRate :: Double
+                              , epochs       :: Int
+                              , epoch        :: Int
+                              , batchSize    :: Int
+                              , chart        :: [(Int, Double, Double)]
+                              , momentum     :: Double
+                              }
+
+      emptyNetwork = randomNetwork 0 (0, 0) 0 [] (0, (id, id))
+      instance Default Session where
+        def = Session { network      = seq (die "You have not specified a network parameter") emptyNetwork
+                      , training     = seq (die "You have not specified training data") []
+                      , test         = seq (die "You have not specified test data") []
+                      , learningRate = 0.5
+                      , epochs       = 35
+                      , epoch        = 0
+                      , batchSize    = 0
+                      , chart        = []
+                      , momentum     = 0
+                      }
 
       saveNetwork :: Network -> String -> IO ()
       saveNetwork network file =
@@ -73,22 +113,24 @@ module Sibe
       runLayer :: Input -> Layer -> Output
       runLayer input (Layer !biases !weights _) = input <# weights + biases
 
-      forward :: Input -> Network -> Output
-      forward input (O l@(Layer _ _ (fn, _))) = fn $ runLayer input l
-      forward input (l@(Layer _ _ (fn, _)) :- n) = forward ((fst . activation $ l) $ runLayer input l) n
+      forward :: Input -> Session -> Output
+      forward input session = compute input (network session)
+        where
+          compute input (O l@(Layer _ _ (fn, _))) = fn $ runLayer input l
+          compute input (l@(Layer _ _ (fn, _)) :- n) = compute ((fst . activation $ l) $ runLayer input l) n
 
-      randomLayer :: Seed -> (Int, Int) -> Activation -> Layer
-      randomLayer seed (wr, wc) =
-        let weights = uniformSample seed wr $ replicate wc (-1, 1)
-            biases  = randomVector seed Uniform wc * 2 - 1
+      randomLayer :: Seed -> (Int, Int) -> (Double, Double) -> Activation -> Layer
+      randomLayer seed (wr, wc) (l, u) =
+        let weights = uniformSample seed wr $ replicate wc (l, u)
+            biases  = randomVector seed Uniform wc * realToFrac u - realToFrac l
         in Layer biases weights
 
-      randomNetwork :: Seed -> Int -> [(Int, Activation)] -> (Int, Activation) -> Network
-      randomNetwork seed input [] (output, a) =
-        O $ randomLayer seed (input, output) a
-      randomNetwork seed input ((h, a):hs) output =
-        randomLayer seed (input, h) a :-
-        randomNetwork (seed + 1) h hs output
+      randomNetwork :: Seed -> (Double, Double) -> Int -> [(Int, Activation)] -> (Int, Activation) -> Network
+      randomNetwork seed bound input [] (output, a) =
+        O $ randomLayer seed (input, output) bound a
+      randomNetwork seed bound input ((h, a):hs) output =
+        randomLayer seed (input, h) bound a :-
+        randomNetwork (seed + 1) bound h hs output
 
       sigmoid :: Vector Double -> Vector Double
       sigmoid x = 1 / max (1 + exp (-x)) 1e-10
@@ -96,18 +138,37 @@ module Sibe
       sigmoid' :: Vector Double -> Vector Double
       sigmoid' x = sigmoid x * (1 - sigmoid x)
 
+      softmax :: Vector Double -> Vector Double
+      softmax x = cmap (\a -> exp a / s) x
+        where
+          s = V.sum $ exp x
+
+      one :: a -> Double
+      one x = 1
+
+      softmax' :: Vector Double -> Vector Double
+      softmax' x = softmax x * (1 - softmax x)
+
       relu :: Vector Double -> Vector Double
-      relu x = log (max (1 + exp x) 1e-10)
+      relu = cmap (max 0.1)
 
       relu' :: Vector Double -> Vector Double
-      relu' = sigmoid
+      relu' = cmap dev
+        where dev x
+                | x < 0 = 0
+                | otherwise = 1
 
-      crossEntropy :: Output -> Output -> Double
-      crossEntropy output target =
-        let pairs = zip (toList output) (toList target)
-            n = fromIntegral (length pairs)
-        in (-1 / n) * sum (map f pairs)
+      crossEntropy :: Session -> Double
+      crossEntropy session =
+        let inputs = map fst (test session)
+            labels = map (toList . snd) (test session)
+            outputs = map (toList . (`forward` session)) inputs
+            pairs = zip outputs labels
+            n = genericLength pairs
+
+        in sum (map set pairs) / n
         where
+          set (os, ls) = (-1 / genericLength os) * sum (zipWith (curry f) os ls)
           f (a, y) = y * log (max 1e-10 a) + (1 - y) * log (max (1 - a) 1e-10)
 
       train :: Input
@@ -138,35 +199,137 @@ module Sibe
                 o = fn y
                 (n', delta) = run o n
 
-                de = delta * fn' y -- quadratic cost
+                de = delta * fn' y
 
-                biases'  = biases  - scale alpha de
-                weights' = weights - scale alpha (input `outer` de)
+                biases'  = biases  - cmap (*alpha) de
+                weights' = weights - cmap (*alpha) (input `outer` de)
                 layer = Layer biases' weights' (fn, fn')
 
                 pass = weights #> de
                 -- pass = weights #> de
             in (layer :- n', pass)
 
-      session :: [Input] -> Network -> [Output] -> Double -> (Int, Int) -> Network
-      session inputs network labels alpha (iterations, epochs) =
-        let n = length inputs
-            indexes = shuffle n (map (`mod` n) [0..n * epochs])
-        in foldl' iter network indexes
+      {-trainMomentum :: Input
+                    -> Network
+                    -> Output -- target
+                    -> Double -- learning rate
+                    -> (Double, Double) -- momentum
+                    -> Network -- network's output
+      trainMomentum input network target alpha (m, v) = fst $ run input network
         where
-          iter net i =
-            let n = length inputs
-                index = i `mod` n
-                input = inputs !! index
-                label = labels !! index
-            in foldl' (\net _ -> train input net label alpha) net [0..iterations]
+          run :: Input -> Network -> (Network, Vector Double)
+          run input (O l@(Layer biases weights (fn, fn'))) =
+            let y = runLayer input l
+                o = fn y
+                delta = o - target
+                de = delta * fn' y
+                v = 
+                -- de = delta -- cross entropy cost
 
-      shuffle :: Seed -> [a] -> [a]
-      shuffle seed list =
-        let ords = map ord $ take (length list) (randomRs (0, 1) (mkStdGen seed) :: [Int])
-        in map snd $ sortBy (\x y -> fst x) (zip ords list)
-        where ord x | x == 0 = LT
-                    | x == 1 = GT
+                biases'  = biases  - scale alpha de
+                weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly
+                layer    = Layer biases' weights' (fn, fn') -- updated layer
+
+                pass = weights #> de
+                -- pass = weights #> de
+
+            in (O layer, pass)
+          run input (l@(Layer biases weights (fn, fn')) :- n) =
+            let y = runLayer input l
+                o = fn y
+                (n', delta) = run o n
+
+                de = delta * fn' y
+
+                biases'  = biases  - cmap (*alpha) de
+                weights' = weights - cmap (*alpha) (input `outer` de)
+                layer = Layer biases' weights' (fn, fn')
+
+                pass = weights #> de
+                -- pass = weights #> de
+            in (layer :- n', pass)-}
+
+      gd :: Session -> IO Session
+      gd session = do
+        seed <- newStdGen
+
+        let pairs = training session
+            alpha = learningRate session
+            net = network session
+
+        let n = length pairs
+
+        shuffled <- shuffleM pairs
+
+        let newnet = foldl' (\n (input, label) -> train input n label alpha) net pairs
+
+        return session { network = newnet
+                       , epoch = epoch session + 1
+                       }
+
+      sgd :: Session -> IO Session
+      sgd session = do
+        seed <- newStdGen
+
+        let pairs = training session
+            bsize = batchSize session
+            alpha = learningRate session
+            net = network session
+
+        let n = length pairs
+            iterations = n `div` bsize - 1
+
+        shuffled <- shuffleM pairs
+
+        let iter net i =
+              let n = length pairs
+                  batch = take bsize . drop (i * bsize) $ shuffled
+                  batchInputs = map fst batch
+                  batchLabels = map snd batch
+                  batchPair = zip batchInputs batchLabels
+              in foldl' (\n (input, label) -> train input n label alpha) net batchPair
+
+        let newnet = foldl' iter net [0..iterations]
+            cost = crossEntropy (session { network = newnet })
+
+        let el = map (\(e, l, _) -> (e, l)) (chart session)
+            ea = map (\(e, _, a) -> (e, a)) (chart session)
+
+        putStrLn $ (show $ epoch session) ++ " => " ++ (show cost) ++ " @ " ++ (show $ learningRate session)
+
+        toFile Chart.def "sgd.png" $ do
+          Chart.layoutlr_title Chart..= "loss over time"
+          Chart.plotLeft (Chart.line "loss" [el])
+          Chart.plotRight (Chart.line "learningRate" [ea])
+
+        return session { network = newnet
+                       , epoch = epoch session + 1
+                       , chart = (epoch session, cost, learningRate session):chart session
+                       }
+
+
+      accuracy :: Session -> Double
+      accuracy session = 
+        let inputs = map fst (test session)
+            labels = map snd (test session)
+
+            results = map (`forward` session) inputs
+            rounded = map (map round . toList) results
+
+            equals = zipWith (==) rounded (map (map round . toList) labels)
+        in genericLength (filter (== True) equals) / genericLength inputs
+
+      learningRateDecay :: (Double, Double) -> Session -> Session
+      learningRateDecay (step, m) session =
+        session { learningRate = max m $ learningRate session / step }
+
+      run :: (Session -> IO Session)
+          ->  Session -> IO Session
+      run fn session = foldM (\s i -> fn s) session [0..epochs session]
+
+      factorial :: Int -> Int
+      factorial 0 = 1
+      factorial x = x * factorial (x - 1)
 
       genSeed :: IO Seed
       genSeed = do
@@ -176,12 +339,7 @@ module Sibe
       replaceVector :: Vector Double -> Int -> Double -> Vector Double
       replaceVector vec index value =
         let list = toList vec
-        in fromList $ rrow index list
-        where
-          rrow index [] = []
-          rrow index (x:xs)
-            | index == index = value:xs
-            | otherwise = x : rrow (index + 1) xs
+        in fromList $ take index list ++ value : drop (index + 1) list
 
       clip :: Double -> (Double, Double) -> Double
       clip x (l, u) = min u (max l x)
