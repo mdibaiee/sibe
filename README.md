@@ -1,43 +1,17 @@
 sibe
 ====
-
 A simple Machine Learning library.
 
-A simple neural network:
-```haskell
-module Main where
-  import Sibe
-  import Numeric.LinearAlgebra
-  import Data.List
+notMNIST dataset, cross-entropy loss, learning rate decay and sgd:
+![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)
 
-  main = do
-    let learning_rate = 0.5
-        (iterations, epochs) = (2, 1000)
-        a = (logistic, logistic') -- activation function and the derivative
-        rnetwork = randomNetwork 0 2 [(8, a)] (1, a) -- two inputs, 8 nodes in a single hidden layer, 1 output
-
-        inputs = [vector [0, 1], vector [1, 0], vector [1, 1], vector [0, 0]] -- training dataset
-        labels = [vector [1], vector [1], vector [0], vector [0]] -- training labels
-
-        -- initial cost using crossEntropy method
-        initial_cost = zipWith crossEntropy (map (`forward` rnetwork) inputs) labels
-
-        -- train the network
-        network = session inputs rnetwork labels learning_rate (iterations, epochs)
-
-        -- run inputs through the trained network
-        -- note: here we are using the examples in the training dataset to test the network,
-        --       this is here just to demonstrate the way the library works, you should not do this
-        results = map (`forward` network) inputs
-
-        -- compute the new cost
-        cost = zipWith crossEntropy (map (`forward` network) inputs) labels
+See examples:
 ```
-
-See other examples:
-```
-# Simplest case of a neural network
+# neural network examples
 stack exec example-xor
+stack exec example-424
+# notMNIST dataset, achieves ~87% accuracy using exponential learning rate decay
+stack exec example-notmnist
 
 # Naive Bayes document classifier, using Reuters dataset
 # using Porter stemming, stopword elimination and a few custom techniques.
