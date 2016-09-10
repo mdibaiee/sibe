@@ -21,11 +21,12 @@ module Main where
   import Graphics.Rendering.Chart.Backend.Cairo
 
   main = do
+    -- random seed, you might comment this line to get real random results
     setStdGen (mkStdGen 100)
 
     let a         = (sigmoid, sigmoid')
-        o         = (softmax, one)
-        rnetwork  = randomNetwork 0 (-1, 1) (28*28) [(100, a)] (10, a)
+        o         = (softmax, crossEntropy')
+        rnetwork  = randomNetwork 0 (-1, 1) (28*28) [(100, a)] (10, o)
 
     (inputs, labels) <- dataset
 
@@ -41,11 +42,11 @@ module Main where
         telabels = take tep . drop trp $ labels
 
     let session = def { learningRate = 0.5
-                      , batchSize = 32
-                      , epochs = 24
-                      , network = rnetwork
-                      , training = zip trinputs trlabels
-                      , test = zip teinputs telabels
+                      , batchSize    = 32
+                      , epochs       = 10
+                      , network      = rnetwork
+                      , training     = zip trinputs trlabels
+                      , test         = zip teinputs telabels
                       } :: Session
 
     let initialCost = crossEntropy session

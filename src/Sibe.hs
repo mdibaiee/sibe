@@ -22,10 +22,10 @@ module Sibe
      sigmoid',
      softmax,
      softmax',
-     one,
      relu,
      relu',
      crossEntropy,
+     crossEntropy',
      genSeed,
      replaceVector,
      Session(..),
@@ -143,11 +143,10 @@ module Sibe
         where
           s = V.sum $ exp x
 
-      one :: a -> Double
-      one x = 1
-
       softmax' :: Vector Double -> Vector Double
-      softmax' x = softmax x * (1 - softmax x)
+      softmax' = cmap (\a -> sig a * (1 - sig a))
+        where
+          sig x = 1 / max (1 + exp (-x)) 1e-10
 
       relu :: Vector Double -> Vector Double
       relu = cmap (max 0.1)
@@ -165,11 +164,13 @@ module Sibe
             outputs = map (toList . (`forward` session)) inputs
             pairs = zip outputs labels
             n = genericLength pairs
-
         in sum (map set pairs) / n
         where
-          set (os, ls) = (-1 / genericLength os) * sum (zipWith (curry f) os ls)
-          f (a, y) = y * log (max 1e-10 a) + (1 - y) * log (max (1 - a) 1e-10)
+          set (os, ls) = (-1 / genericLength os) * sum (zipWith f os ls)
+          f a y = y * log (max 1e-10 a)
+
+      crossEntropy' :: Vector Double -> Vector Double
+      crossEntropy' x = 1 / fromIntegral (V.length x)
 
       train :: Input
             -> Network
@@ -182,9 +183,9 @@ module Sibe
           run input (O l@(Layer biases weights (fn, fn'))) =
             let y = runLayer input l
                 o = fn y
-                delta = o - target
+                delta = o - target 
                 de = delta * fn' y
-                -- de = delta -- cross entropy cost
+                -- de = delta / fromIntegral (V.length o) -- cross entropy cost
 
                 biases'  = biases  - scale alpha de
                 weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly

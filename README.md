@@ -44,7 +44,7 @@ A simple Machine Learning library.
 # neural network examples
 stack exec example-xor
 stack exec example-424
-# notMNIST dataset, achieves ~87% accuracy using exponential learning rate decay
+# notMNIST dataset, achieves ~87.5% accuracy after 9 epochs (2 minutes)
 stack exec example-notmnist
 
 # Naive Bayes document classifier, using Reuters dataset
