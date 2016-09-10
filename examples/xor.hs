@@ -13,7 +13,7 @@ module Main where
         labels = [vector [1], vector [1], vector [0], vector [0]]
 
         session = def { network = rnetwork
-                      , learningRate = 0.5
+                      , learningRate = 0.8
                       , epochs = 1000
                       , training = zip inputs labels
                       , test = zip inputs labels
