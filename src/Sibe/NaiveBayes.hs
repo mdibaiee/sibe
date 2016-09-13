@@ -4,7 +4,6 @@ module Sibe.NaiveBayes
    initialize,
    run,
    session,
-   ordNub,
    accuracy,
    precision,
    recall,
@@ -19,6 +18,7 @@ module Sibe.NaiveBayes
    removeStopwords,
   )
   where
+    import Sibe.Utils
     import Sibe.NLP
     import Data.List
     import Debug.Trace

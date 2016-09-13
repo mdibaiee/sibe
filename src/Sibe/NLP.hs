@@ -1,7 +1,6 @@
 module Sibe.NLP
   (Class,
    Document(..),
-   ordNub,
    accuracy,
    recall,
    precision,
@@ -14,15 +13,16 @@ module Sibe.NLP
    ngramText,
   )
   where
+    import Sibe.Utils
     import Data.List
     import Debug.Trace
-    import qualified Data.Set as Set
     import Data.List.Split
     import Data.Maybe
     import Control.Arrow ((&&&))
     import Text.Regex.PCRE
     import Data.Char (isSpace, isNumber, toLower)
     import NLP.Stemmer
+    import qualified Data.Set as Set
 
     type Class = Int;
 
@@ -72,13 +72,6 @@ module Sibe.NLP
           in zip voc $ map (countWordInDoc (words x)) voc
 
         concatDocs = concatMap (\(Document text _) -> text ++ " ")
-
-    ordNub :: (Ord a) => [a] -> [a]
-    ordNub = go Set.empty
-      where
-        go _ [] = []
-        go s (x:xs) = if x `Set.member` s then go s xs
-                                          else x : go (Set.insert x s) xs
 
     accuracy :: [(Int, (Int, Double))] -> Double
     accuracy results =

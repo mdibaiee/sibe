@@ -60,5 +60,8 @@ stack exec example-naivebayes-doc-classifier -- --verbose --top-ten
 
 ### notMNIST
 
-notMNIST dataset, cross-entropy loss, learning rate decay and sgd ([`notmnist.hs`](https://github.com/mdibaiee/sibe/blob/master/examples/notmnist.hs)):
+notMNIST dataset, sigmoid hidden layer, cross-entropy loss, learning rate decay and sgd ([`notmnist.hs`](https://github.com/mdibaiee/sibe/blob/master/examples/notmnist.hs)):
+![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)
+
+notMNIST dataset, relu hidden layer, cross-entropy loss, learning rate decay and sgd ([`notmnist.hs`](https://github.com/mdibaiee/sibe/blob/master/examples/notmnist.hs)):
 ![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)

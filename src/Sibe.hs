@@ -10,8 +10,10 @@ module Sibe
      Output,
      Activation,
      forward,
+     runLayer,
      randomLayer,
      randomNetwork,
+     buildNetwork,
      saveNetwork,
      loadNetwork,
      train,
@@ -30,7 +32,9 @@ module Sibe
      replaceVector,
      Session(..),
      accuracy,
-     learningRateDecay
+     learningRateDecay,
+     ignoreBiases,
+     one
     ) where
       import Numeric.LinearAlgebra
       import System.Random
@@ -62,7 +66,12 @@ module Sibe
 
       data Network = O Layer
                    | Layer :- Network
-                   deriving (Show)
+      
+      instance Show Network where
+        show (Layer biases nodes _ :- n) =
+          (show . length $ toLists nodes) ++ "x" ++ (show . length . head . toLists $ nodes) ++ " " ++ (show . length . toList $ biases) ++ " :- " ++ show n
+        show (O (Layer biases nodes _)) =
+          (show . length $ toLists nodes) ++ "x" ++ (show . length . head . toLists $ nodes) ++ " " ++ (show . length . toList $ biases)
                    
       infixr 5 :-
 
@@ -75,7 +84,7 @@ module Sibe
                               , batchSize    :: Int
                               , chart        :: [(Int, Double, Double)]
                               , momentum     :: Double
-                              }
+                              } deriving (Show)
 
       emptyNetwork = randomNetwork 0 (0, 0) 0 [] (0, (id, id))
       instance Default Session where
@@ -132,6 +141,13 @@ module Sibe
         randomLayer seed (input, h) bound a :-
         randomNetwork (seed + 1) bound h hs output
 
+      buildNetwork :: Seed -> (Double, Double) -> Int -> [(Int, Int, Activation)] -> (Int, Int, Activation) -> Network
+      buildNetwork seed bound input [] (outputRows, outputColumns, a) =
+        O $ randomLayer seed (input, outputColumns) bound a
+      buildNetwork seed bound input ((rows, columns, a):hs) output =
+        randomLayer seed (input, columns) bound a :-
+        buildNetwork (seed + 1) bound columns hs output
+
       sigmoid :: Vector Double -> Vector Double
       sigmoid x = 1 / max (1 + exp (-x)) 1e-10
 
@@ -172,6 +188,9 @@ module Sibe
       crossEntropy' :: Vector Double -> Vector Double
       crossEntropy' x = 1 / fromIntegral (V.length x)
 
+      one :: Vector Double -> Vector Double
+      one v = vector $ replicate (V.length v) 1
+
       train :: Input
             -> Network
             -> Output -- target
@@ -209,46 +228,6 @@ module Sibe
                 pass = weights #> de
                 -- pass = weights #> de
             in (layer :- n', pass)
-
-      {-trainMomentum :: Input
-                    -> Network
-                    -> Output -- target
-                    -> Double -- learning rate
-                    -> (Double, Double) -- momentum
-                    -> Network -- network's output
-      trainMomentum input network target alpha (m, v) = fst $ run input network
-        where
-          run :: Input -> Network -> (Network, Vector Double)
-          run input (O l@(Layer biases weights (fn, fn'))) =
-            let y = runLayer input l
-                o = fn y
-                delta = o - target
-                de = delta * fn' y
-                v = 
-                -- de = delta -- cross entropy cost
-
-                biases'  = biases  - scale alpha de
-                weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly
-                layer    = Layer biases' weights' (fn, fn') -- updated layer
-
-                pass = weights #> de
-                -- pass = weights #> de
-
-            in (O layer, pass)
-          run input (l@(Layer biases weights (fn, fn')) :- n) =
-            let y = runLayer input l
-                o = fn y
-                (n', delta) = run o n
-
-                de = delta * fn' y
-
-                biases'  = biases  - cmap (*alpha) de
-                weights' = weights - cmap (*alpha) (input `outer` de)
-                layer = Layer biases' weights' (fn, fn')
-
-                pass = weights #> de
-                -- pass = weights #> de
-            in (layer :- n', pass)-}
 
       gd :: Session -> IO Session
       gd session = do
@@ -323,6 +302,13 @@ module Sibe
       learningRateDecay :: (Double, Double) -> Session -> Session
       learningRateDecay (step, m) session =
         session { learningRate = max m $ learningRate session / step }
+
+      ignoreBiases :: Session -> Session
+      ignoreBiases session =
+        session { network = rmbias (network session) }
+        where
+          rmbias (O (Layer nodes biases a)) = O $ Layer nodes (biases * 0) a
+          rmbias ((Layer nodes biases a) :- n) = Layer nodes (biases * 0) a :- rmbias n
 
       run :: (Session -> IO Session)
           ->  Session -> IO Session

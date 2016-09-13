@@ -1,0 +1,44 @@
+module Sibe.Word2Vec
+  (word2vec,
+   mapTuple
+  ) where
+    import Sibe
+    import Sibe.NLP
+    import Debug.Trace
+    import Data.Char
+    import Data.Maybe
+    import Data.List
+    import Numeric.LinearAlgebra hiding (find)
+    import qualified Data.Vector.Storable as V
+
+    word2vec docs session = do
+      let cooccurence = concat $ map co docs
+          a = (sigmoid, sigmoid')
+          o = (softmax, crossEntropy')
+          window = 2
+          s = session { training = cooccurence
+                      , test     = cooccurence
+                      , network  = buildNetwork 0 (-1, 1) n [(n, 300, (id, id))] (300, n, (softmax, crossEntropy'))
+                      }
+      print $ network s
+      newses <- run gd s
+      return (newses, cooccurence, vocabulary, vocvec)
+      where
+        n = length vocabulary
+        vocabulary = ordNub . words . map toLower . concatMap (++ " ") $ docs
+        vocvec = zip vocabulary $ map tovec [0..n]
+        tovec i = replicate i 0 ++ [1] ++ replicate (n - i - 1) 0
+        co d =
+          let p = pairs d
+          in map (\(a, [b, c]) -> (f a, V.concat [f b, f c])) p
+          where 
+            f w = vector . snd . fromJust $ find ((== w) . fst) vocvec
+        pairs d = concatMap iter [0..length ws]
+          where 
+            ws = words $ map toLower d
+            iter i
+              | i > 0 && i < length ws - 1 = [(ws !! i, [ws !! (i - 1), ws !! (i + 1)])]
+              | otherwise = []
+
+    mapTuple :: (a -> b) -> (a, a) -> (b, b)
+    mapTuple f (a, b) = (f a, f b)
