@@ -84,6 +84,7 @@ module Sibe
                               , batchSize    :: Int
                               , chart        :: [(Int, Double, Double)]
                               , momentum     :: Double
+                              , biases       :: Bool
                               } deriving (Show)
 
       emptyNetwork = randomNetwork 0 (0, 0) 0 [] (0, (id, id))
@@ -97,6 +98,7 @@ module Sibe
                       , batchSize    = 0
                       , chart        = []
                       , momentum     = 0
+                      , biases       = True
                       }
 
       saveNetwork :: Network -> String -> IO ()
@@ -121,6 +123,9 @@ module Sibe
 
       runLayer :: Input -> Layer -> Output
       runLayer input (Layer !biases !weights _) = input <# weights + biases
+
+      runLayer' :: Input -> Layer -> Output
+      runLayer' input (Layer !biases !weights _) = input <# weights
 
       forward :: Input -> Session -> Output
       forward input session = compute input (network session)

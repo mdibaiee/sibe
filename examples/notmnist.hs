@@ -43,7 +43,7 @@ module Main where
 
     let session = def { learningRate = 0.5
                       , batchSize    = 32
-                      , epochs       = 9
+                      , epochs       = 10
                       , network      = rnetwork
                       , training     = zip trinputs trlabels
                       , test         = zip teinputs telabels

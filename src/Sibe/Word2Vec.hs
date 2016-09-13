@@ -26,14 +26,16 @@ module Sibe.Word2Vec
       return trainingData
       let s = session { training = trainingData
                       , network = buildNetwork 0 (-1, 1) v [(v, 25, (id, one))] (20, v, (softmax, crossEntropy'))
+                      , biases = False
                       }
       print trainingData
-      newses <- run (gd . learningRateDecay (1.1, 0.1) . ignoreBiases) s
+      newses <- run (gd . learningRateDecay (1.1, 0.1)) s
 
       let (hidden@(Layer biases nodes _) :- _) = network newses
       {-let computedVocVec = map (\(w, v) -> (w, forward v newses)) vocvec-}
-      let computedVocVec = map (\(w, v) -> (w, (fromRows [v]) <> nodes)) vocvec
-      print computedVocVec
+      print biases
+      let computedVocVec = map (\(w, v) -> (w, v <# nodes)) vocvec
+      {-print computedVocVec-}
 
       {-mapM_ (\(w, v) -> do
                       putStr $ w ++ ": "
