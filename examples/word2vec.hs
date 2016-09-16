@@ -16,17 +16,17 @@ module Main where
 
   main = do
     sws <- lines <$> readFile "examples/stopwords"
-    {-ds <- do-}
-        {-content <- readFile "examples/doc-classifier-data/data-reuters"-}
-        {-let splitted = splitOn (replicate 10 '-' ++ "\n") content-}
-            {-d = concatMap (tail . lines) (take 100 splitted)-}
-        {-return $ removeWords sws d-}
+    {-ds <- do
+        content <- readFile "examples/doc-classifier-data/data-reuters"
+        let splitted = splitOn (replicate 10 '-' ++ "\n") content
+            d = concatMap (tail . lines) (take 100 splitted)
+        return $ removeWords sws d-}
     --let ds = ["I like deep learning", "I like NLP", "I enjoy flying"]
     let ds = ["the king loves the queen", "the queen loves the king",
               "the dwarf hates the king", "the queen hates the dwarf",
               "the dwarf poisons the king", "the dwarf poisons the queen"]
 
-    let session = def { learningRate = 0.1
+    let session = def { learningRate = 5e-2
                       , batchSize = 1
                       , epochs = 100
                       , debug = True

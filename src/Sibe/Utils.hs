@@ -1,7 +1,8 @@
 module Sibe.Utils
-  (similarity,
-   ordNub,
-   onehot
+  ( similarity
+  , ordNub
+  , onehot
+  , average
   ) where
     import qualified Data.Vector.Storable as V
     import qualified Data.Set as Set
@@ -22,3 +23,6 @@ module Sibe.Utils
         go _ [] = []
         go s (x:xs) = if x `Set.member` s then go s xs
                                           else x : go (Set.insert x s) xs
+
+    average :: Vector Double -> Vector Double
+    average v = cmap (/ (V.sum v)) v

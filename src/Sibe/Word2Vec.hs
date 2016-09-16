@@ -75,12 +75,15 @@ module Sibe.Word2Vec
                     | i == length vocvec - 1 = before
                     | otherwise = before ++ after
                   vectorized = map (\w -> snd . fromJust $ find ((== w) . fst) vocvec) ns
-                  new = cmap (max 1) $ foldl1 (+) vectorized
+                  new = foldl1 (+) vectorized
               in
-                case method w2v of
-                  SkipGram -> zip (repeat v) vectorized
-                  CBOW     -> zip vectorized (repeat v)
-                  _        -> error "unsupported word2vec method"
+                if length wds <= 1
+                  then []
+                  else
+                    case method w2v of
+                      SkipGram -> [(v, average new)]
+                      CBOW     -> [(average new, v)]
+                      _        -> error "unsupported word2vec method"
 
     cleanText :: String -> String
     cleanText string =
