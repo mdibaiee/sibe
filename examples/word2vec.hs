@@ -27,13 +27,14 @@ module Main where
               "the dwarf poisons the king", "the dwarf poisons the queen"]
 
     let session = def { learningRate = 0.1
-                      , batchSize = 16
+                      , batchSize = 1
                       , epochs = 100
+                      , debug = True
                       } :: Session
         w2v = def { docs = ds
                   , dimensions = 50
                   , method = SkipGram
-                  , window = 3
+                  , window = 2
                   } :: Word2Vec
 
 

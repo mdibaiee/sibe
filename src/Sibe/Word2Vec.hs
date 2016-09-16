@@ -13,6 +13,7 @@ module Sibe.Word2Vec
     import qualified Data.Vector.Storable as V
     import Data.Default.Class
     import Data.Function (on)
+    import Control.Monad
 
     data W2VMethod = SkipGram | CBOW
     data Word2Vec = Word2Vec { docs :: [String]
@@ -30,11 +31,12 @@ module Sibe.Word2Vec
                       , network = randomNetwork 0 (-1, 1) v [(dimensions w2v, (id, one))] (v, (softmax, one))
                       }
 
-      putStr "vocabulary size: "
-      print v
+      when (debug s) $ do
+        putStr "vocabulary size: "
+        print v
 
-      putStr "trainingData length: "
-      print . length $ trainingData
+        putStr "trainingData length: "
+        print . length $ trainingData
 
       -- biases are not used in skipgram/cbow
       newses <- run (sgd . ignoreBiases) s
@@ -73,7 +75,7 @@ module Sibe.Word2Vec
                     | i == length vocvec - 1 = before
                     | otherwise = before ++ after
                   vectorized = map (\w -> snd . fromJust $ find ((== w) . fst) vocvec) ns
-                  new = foldl1 (+) vectorized
+                  new = cmap (max 1) $ foldl1 (+) vectorized
               in
                 case method w2v of
                   SkipGram -> zip (repeat v) vectorized

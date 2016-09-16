@@ -86,6 +86,7 @@ module Sibe
                               , batchSize    :: Int
                               , chart        :: [(Int, Double, Double)]
                               , momentum     :: Double
+                              , debug        :: Bool
                               } deriving (Show)
 
       emptyNetwork = randomNetwork 0 (0, 0) 0 [] (0, (id, id))
@@ -99,6 +100,7 @@ module Sibe
                       , batchSize    = 0
                       , chart        = []
                       , momentum     = 0
+                      , debug        = False
                       }
 
       saveNetwork :: Network -> String -> IO ()
