@@ -256,6 +256,7 @@ module Sibe
         shuffled <- shuffleM pairs
 
         let newnet = foldl' (\n (input, label) -> train input n label alpha) net pairs
+            cost = crossEntropy (session { network = newnet })
 
         let el = map (\(e, l, _) -> (e, l)) (chart session)
             ea = map (\(e, _, a) -> (e, a)) (chart session)
@@ -268,6 +269,7 @@ module Sibe
 
         return session { network = newnet
                        , epoch = epoch session + 1
+                       , chart = (epoch session, cost, learningRate session):chart session
                        }
 
       sgd :: Session -> IO Session

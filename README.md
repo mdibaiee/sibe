@@ -19,6 +19,8 @@ A simple Machine Learning library.
                       , epochs = 1000
                       , training = zip inputs labels
                       , test = zip inputs labels
+                      , drawChart = True
+                      , chartName = "nn.png" -- draws chart of loss over time
                       } :: Session
 
         initialCost = crossEntropy session
