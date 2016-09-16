@@ -10,7 +10,9 @@ module Sibe
      Output,
      Activation,
      forward,
+     forward',
      runLayer,
+     runLayer',
      randomLayer,
      randomNetwork,
      buildNetwork,
@@ -84,7 +86,6 @@ module Sibe
                               , batchSize    :: Int
                               , chart        :: [(Int, Double, Double)]
                               , momentum     :: Double
-                              , biases       :: Bool
                               } deriving (Show)
 
       emptyNetwork = randomNetwork 0 (0, 0) 0 [] (0, (id, id))
@@ -98,7 +99,6 @@ module Sibe
                       , batchSize    = 0
                       , chart        = []
                       , momentum     = 0
-                      , biases       = True
                       }
 
       saveNetwork :: Network -> String -> IO ()
@@ -132,6 +132,12 @@ module Sibe
         where
           compute input (O l@(Layer _ _ (fn, _))) = fn $ runLayer input l
           compute input (l@(Layer _ _ (fn, _)) :- n) = compute ((fst . activation $ l) $ runLayer input l) n
+
+      forward' :: Input -> Session -> Output
+      forward' input session = compute input (network session)
+        where
+          compute input (O l@(Layer _ _ (fn, _))) = fn $ runLayer' input l
+          compute input (l@(Layer _ _ (fn, _)) :- n) = compute ((fst . activation $ l) $ runLayer' input l) n
 
       randomLayer :: Seed -> (Int, Int) -> (Double, Double) -> Activation -> Layer
       randomLayer seed (wr, wc) (l, u) =
@@ -209,14 +215,12 @@ module Sibe
                 o = fn y
                 delta = o - target 
                 de = delta * fn' y
-                -- de = delta / fromIntegral (V.length o) -- cross entropy cost
 
                 biases'  = biases  - scale alpha de
                 weights' = weights - scale alpha (input `outer` de) -- small inputs learn slowly
                 layer    = Layer biases' weights' (fn, fn') -- updated layer
 
                 pass = weights #> de
-                -- pass = weights #> de
 
             in (O layer, pass)
           run input (l@(Layer biases weights (fn, fn')) :- n) =
@@ -226,12 +230,11 @@ module Sibe
 
                 de = delta * fn' y
 
-                biases'  = biases  - cmap (*alpha) de
-                weights' = weights - cmap (*alpha) (input `outer` de)
+                biases'  = biases  - scale alpha de
+                weights' = weights - scale alpha (input `outer` de)
                 layer = Layer biases' weights' (fn, fn')
 
                 pass = weights #> de
-                -- pass = weights #> de
             in (layer :- n', pass)
 
       gd :: Session -> IO Session
@@ -280,8 +283,6 @@ module Sibe
         let el = map (\(e, l, _) -> (e, l)) (chart session)
             ea = map (\(e, _, a) -> (e, a)) (chart session)
 
-        putStrLn $ (show $ epoch session) ++ " => " ++ (show cost) ++ " @ " ++ (show $ learningRate session)
-
         toFile Chart.def "sgd.png" $ do
           Chart.layoutlr_title Chart..= "loss over time"
           Chart.plotLeft (Chart.line "loss" [el])
@@ -312,8 +313,8 @@ module Sibe
       ignoreBiases session =
         session { network = rmbias (network session) }
         where
-          rmbias (O (Layer nodes biases a)) = O $ Layer nodes (biases * 0) a
-          rmbias ((Layer nodes biases a) :- n) = Layer nodes (biases * 0) a :- rmbias n
+          rmbias (O (Layer biases nodes a)) = O $ Layer (biases * 0) nodes a
+          rmbias ((Layer biases nodes a) :- n) = Layer (biases * 0) nodes a :- rmbias n
 
       run :: (Session -> IO Session)
           ->  Session -> IO Session

@@ -1,9 +1,9 @@
 module Sibe.Word2Vec
-  (word2vec,
-   Word2Vec (..)
+  ( word2vec
+  , Word2Vec (..)
+  , W2VMethod (..)
   ) where
     import Sibe
-    import Sibe.NLP
     import Sibe.Utils
     import Debug.Trace
     import Data.Char
@@ -14,8 +14,11 @@ module Sibe.Word2Vec
     import Data.Default.Class
     import Data.Function (on)
 
+    data W2VMethod = SkipGram | CBOW
     data Word2Vec = Word2Vec { docs :: [String]
                              , window :: Int
+                             , dimensions :: Int
+                             , method :: W2VMethod
                              }
     instance Default Word2Vec where
       def = Word2Vec { docs = []
@@ -23,83 +26,70 @@ module Sibe.Word2Vec
                      }
 
     word2vec w2v session = do
-      return trainingData
       let s = session { training = trainingData
-                      , network = buildNetwork 0 (-1, 1) v [(v, 25, (id, one))] (20, v, (softmax, crossEntropy'))
-                      , biases = False
+                      , network = randomNetwork 0 (-1, 1) v [(dimensions w2v, (id, one))] (v, (softmax, one))
                       }
-      print trainingData
-      newses <- run (gd . learningRateDecay (1.1, 0.1)) s
 
+      putStr "vocabulary size: "
+      print v
+
+      putStr "trainingData length: "
+      print . length $ trainingData
+
+      -- biases are not used in skipgram/cbow
+      newses <- run (sgd . ignoreBiases) s
+
+
+      -- export the hidden layer
       let (hidden@(Layer biases nodes _) :- _) = network newses
-      {-let computedVocVec = map (\(w, v) -> (w, forward v newses)) vocvec-}
-      print biases
-      let computedVocVec = map (\(w, v) -> (w, v <# nodes)) vocvec
-      {-print computedVocVec-}
+      -- run words through the hidden layer alone to get the word vector
+      let computedVocVec = map (\(w, v) -> (w, runLayer' v hidden)) vocvec
 
-      {-mapM_ (\(w, v) -> do
-                      putStr $ w ++ ": "
-                      let similarities = map (similarity v . snd) computedVocVec
-                      let sorted = sortBy (compare `on` similarity v . snd) computedVocVec
-                      {-print $ zip (map fst sorted) similarities-}
-                      print . take 2 . drop 1 . reverse $ map fst sorted
-            ) computedVocVec-}
-
-      return newses
+      return (computedVocVec, vocvec)
       where
-        ws = words (concatMap ((++ " <start> ") . map toLower) (docs w2v))
+        -- clean documents
+        ds = map cleanText (docs w2v)
+
+        -- words of each document
+        wd = map (words . (++ " ") . (map toLower)) ds
+
+        -- all words together, used to generate the vocabulary
+        ws = words (concatMap ((++ " ") . map toLower) ds)
         vocabulary = ordNub ws
         v = length vocabulary
 
-        cooccurence = foldl' iter [] (zip [0..] ws)
-          where
-            iter acc (i, w) =
-              let a = findIndex ((== w) . fst) acc
-                  before = take (window w2v) . drop (i - window w2v) $ ws
-                  after = take (window w2v) . drop (i + 1) $ ws
-                  ns = if i == 0 then after else before ++ after
-              in
-                if isJust a then
-                  let idx = fromJust a
-                      new = foldl (\acc n -> add acc n) (snd $ acc !! idx) ns
-                  in take idx acc ++ [(w, new)] ++ drop (idx + 1) acc
-                else
-                  acc ++ [(w, map (\n -> (n, 1)) ns)]
-
-            add [] n = [(n, 1)]
-            add ((hw, hc):hs) n
-              | n == hw = (hw, hc + 1):hs
-              | otherwise = (hw, hc):add hs n
-
+        -- generate one-hot vectors for each word of vocabulary
         vocvec = zip vocabulary $ map (onehot v) [0..v - 1]
-        {-trainingData = map iter cooccurence
-          where
-            iter (w, targets) =
-              let ts = map (\(w, c) -> c * (snd . fromJust $ find ((== w) . fst) vocvec)) targets
-                  folded = foldl (+) (vector $ replicate v 0) ts
-                  input = snd . fromJust $ find ((== w) . fst) vocvec
-              in (input, folded)-}
-        trainingData = map iter $ zip [window w2v..length vocvec - window w2v] vocvec
-          where
-            iter (i, (w, v)) =
-              let before = take (window w2v) . drop (i - window w2v) $ vocvec
-                  after = take (window w2v) . drop (i + 1) $ vocvec
-                  ns = map snd $ before ++ after
-                  new = foldl1 (+) ns
-              in (v, new)
 
-            add [] n = [(n, 1)]
-            add ((hw, hc):hs) n
-              | n == hw = (hw, hc + 1):hs
-              | otherwise = (hw, hc):add hs n
-
-        wordfrequency = foldl' iter [] ws
+        -- training data: generate input and output pairs for each word and the words in it's window
+        trainingData = concatMap (\wds -> concatMap (iter wds) $ zip [0..] wds) wd
           where
-            iter acc w =
-              let i = findIndex ((== w) . fst) acc
+            iter wds (i, w) =
+              let v = snd . fromJust . find ((==w) . fst) $ vocvec
+                  before = take (window w2v) . drop (i - window w2v) $ wds
+                  after = take (window w2v) . drop (i + 1) $ wds
+                  ns 
+                    | i == 0 = after
+                    | i == length vocvec - 1 = before
+                    | otherwise = before ++ after
+                  vectorized = map (\w -> snd . fromJust $ find ((== w) . fst) vocvec) ns
+                  new = foldl1 (+) vectorized
               in
-                if isJust i then
-                  let idx = fromJust i
-                  in take idx acc ++ [(w, snd (acc !! idx) + 1)] ++ drop (idx + 1) acc
-                else
-                  acc ++ [(w, 1)]
+                case method w2v of
+                  SkipGram -> zip (repeat v) vectorized
+                  CBOW     -> zip vectorized (repeat v)
+                  _        -> error "unsupported word2vec method"
+
+    cleanText :: String -> String
+    cleanText string =
+      let puncs = filter (`notElem` ['!', '"', '#', '$', '%', '(', ')', '.', '?', '\'']) (trim string)
+          spacify = foldl (\acc x -> replace x ' ' acc) puncs [',', '/', '-', '\n', '\r']
+          nonumber = filter (not . isNumber) spacify
+          lower = map toLower nonumber
+      in (unwords . words) lower -- remove unnecessary spaces
+      where
+        trim = f . f
+          where
+            f = reverse . dropWhile isSpace
+        replace needle replacement =
+          map (\c -> if c == needle then replacement else c)

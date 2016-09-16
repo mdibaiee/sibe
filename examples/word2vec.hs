@@ -15,20 +15,43 @@ module Main where
   import Data.List.Split
 
   main = do
-    {-ds <- do
-        content <- readFile "examples/doc-classifier-data/data-reuters"
-        let splitted = splitOn (replicate 10 '-' ++ "\n") content
-            d = concatMap (tail . lines) (take 100 splitted)
-        return d-}
-    let ds = ["I like deep learning", "I like NLP", "I enjoy flying"]
+    sws <- lines <$> readFile "examples/stopwords"
+    {-ds <- do-}
+        {-content <- readFile "examples/doc-classifier-data/data-reuters"-}
+        {-let splitted = splitOn (replicate 10 '-' ++ "\n") content-}
+            {-d = concatMap (tail . lines) (take 100 splitted)-}
+        {-return $ removeWords sws d-}
+    --let ds = ["I like deep learning", "I like NLP", "I enjoy flying"]
+    let ds = ["the king loves the queen", "the queen loves the king",
+              "the dwarf hates the king", "the queen hates the dwarf",
+              "the dwarf poisons the king", "the dwarf poisons the queen"]
 
-    let session = def { learningRate = 0.8
-                      , batchSize = 10
-                      , epochs = 1000
+    let session = def { learningRate = 0.1
+                      , batchSize = 16
+                      , epochs = 100
                       } :: Session
-        w2v = def { docs = ds }:: Word2Vec
+        w2v = def { docs = ds
+                  , dimensions = 50
+                  , method = SkipGram
+                  , window = 3
+                  } :: Word2Vec
 
 
-    r <- word2vec w2v session
-    {-print r-}
+    (computed, vocvec) <- word2vec w2v session
+    
+    mapM_ (\(w, v) -> do
+                    putStr $ w ++ ": "
+                    let similarities = map (similarity v . snd) computed
+                    let sorted = sortBy (compare `on` similarity v . snd) computed
+                    print . take 2 . drop 1 . reverse $ map fst sorted
+          ) computed
+
     return ()
+
+  removeWords :: [String] -> [String] -> [String]
+  removeWords ws documents =
+    map (rm ws) documents
+    where
+        rm list text =
+          unwords $ filter (`notElem` list) (words text)
+
