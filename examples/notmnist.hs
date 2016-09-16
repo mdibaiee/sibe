@@ -47,19 +47,13 @@ module Main where
                       , network      = rnetwork
                       , training     = zip trinputs trlabels
                       , test         = zip teinputs telabels
+                      , drawChart    = True
+                      , chartName    = "notmnist.png"
                       } :: Session
 
     let initialCost = crossEntropy session
 
     newsession <- run (sgd . learningRateDecay (1.1, 5e-2)) session
-
-    let el = map (\(e, l, _) -> (e, l)) (chart newsession)
-        ea = map (\(e, _, a) -> (e, a)) (chart newsession)
-    toFile Chart.def "notmnist.png" $ do
-      Chart.layoutlr_title Chart..= "loss over time"
-      Chart.plotLeft (Chart.line "loss" [el])
-      Chart.plotRight (Chart.line "learningRate" [ea])
-
 
     let cost = crossEntropy newsession
 

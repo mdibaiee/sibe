@@ -85,6 +85,8 @@ module Sibe
                               , epoch        :: Int
                               , batchSize    :: Int
                               , chart        :: [(Int, Double, Double)]
+                              , drawChart    :: Bool
+                              , chartName    :: String
                               , momentum     :: Double
                               , debug        :: Bool
                               } deriving (Show)
@@ -99,6 +101,8 @@ module Sibe
                       , epoch        = 0
                       , batchSize    = 0
                       , chart        = []
+                      , drawChart    = False
+                      , chartName    = "chart.png"
                       , momentum     = 0
                       , debug        = False
                       }
@@ -253,6 +257,15 @@ module Sibe
 
         let newnet = foldl' (\n (input, label) -> train input n label alpha) net pairs
 
+        let el = map (\(e, l, _) -> (e, l)) (chart session)
+            ea = map (\(e, _, a) -> (e, a)) (chart session)
+
+        when (drawChart session) $ do
+          toFile Chart.def (chartName session) $ do
+            Chart.layoutlr_title Chart..= "loss over time"
+            Chart.plotLeft (Chart.line "loss" [el])
+            Chart.plotRight (Chart.line "learningRate" [ea])
+
         return session { network = newnet
                        , epoch = epoch session + 1
                        }
@@ -285,10 +298,11 @@ module Sibe
         let el = map (\(e, l, _) -> (e, l)) (chart session)
             ea = map (\(e, _, a) -> (e, a)) (chart session)
 
-        toFile Chart.def "sgd.png" $ do
-          Chart.layoutlr_title Chart..= "loss over time"
-          Chart.plotLeft (Chart.line "loss" [el])
-          Chart.plotRight (Chart.line "learningRate" [ea])
+        when (drawChart session) $ do
+          toFile Chart.def (chartName session) $ do
+            Chart.layoutlr_title Chart..= "loss over time"
+            Chart.plotLeft (Chart.line "loss" [el])
+            Chart.plotRight (Chart.line "learningRate" [ea])
 
         return session { network = newnet
                        , epoch = epoch session + 1
