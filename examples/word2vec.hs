@@ -12,27 +12,45 @@ module Main where
   import Data.Function (on)
   import Numeric.LinearAlgebra
   import System.IO
+  import System.Directory
   import Data.List.Split
+  import Control.Exception (evaluate)
+  import Debug.Trace
+  import Data.Char
+  import System.Random
+
+  rf :: FilePath -> IO String
+  rf p = do
+    hs <- openFile p ReadMode
+    hSetEncoding hs latin1
+    content <- evaluate =<< hGetContents hs
+    length content `seq` hClose hs
+    return content
 
   main = do
+    setStdGen (mkStdGen 100)
     sws <- lines <$> readFile "examples/stopwords"
-    {-ds <- do
-        content <- readFile "examples/doc-classifier-data/data-reuters"
-        let splitted = splitOn (replicate 10 '-' ++ "\n") content
-            d = concatMap (tail . lines) (take 100 splitted)
-        return $ removeWords sws d-}
-    --let ds = ["I like deep learning", "I like NLP", "I enjoy flying"]
+
+    -- real data, takes a lot of time to train
+    {-ds <- do-}
+        {-files <- filter ((/= "xml") . take 3 . reverse) <$> listDirectory "examples/blogs-corpus/"-}
+        {-contents <- mapM (rf . ("examples/blogs-corpus/" ++)) files-}
+
+        {-let texts = map (unwords . splitOn "&nbsp;") contents-}
+        {-let tags = ["<Blog>", "</Blog>", "<date>", "</date>", "<post>", "</post>", "&nbsp;"]-}
+        {-return $ map cleanText $ removeWords (sws ++ tags) texts-}
+
     let ds = ["the king loves the queen", "the queen loves the king",
               "the dwarf hates the king", "the queen hates the dwarf",
               "the dwarf poisons the king", "the dwarf poisons the queen"]
 
-    let session = def { learningRate = 5e-2
+    let session = def { learningRate = 1e-1
                       , batchSize = 1
-                      , epochs = 100
+                      , epochs = 200
                       , debug = True
                       } :: Session
         w2v = def { docs = ds
-                  , dimensions = 50
+                  , dimensions = 25
                   , method = SkipGram
                   , window = 2
                   } :: Word2Vec
@@ -49,10 +67,25 @@ module Main where
 
     return ()
 
+  cleanText :: String -> String
+  cleanText string = 
+    let notag = unwords $ filter ((/= "<date>") . take 6) (words string)
+        ws = unwords $ filter (`notElem` ["urlLink"]) (words notag)
+        spacify = foldl (\acc x -> replace x ' ' acc) (trim ws) [',', '/', '-', '\n', '\r', '?', '.', '(', ')', '%', '$', '"', ';', ':', '!', '\'']
+        nonumber = filter (not . isNumber) spacify
+        lower = map toLower nonumber
+    in unwords . words $ lower
+    where
+      trim = f . f
+        where
+          f = reverse . dropWhile isSpace
+      replace needle replacement =
+        map (\c -> if c == needle then replacement else c)
+
   removeWords :: [String] -> [String] -> [String]
   removeWords ws documents =
-    map (rm ws) documents
+    map rm documents
     where
-        rm list text =
-          unwords $ filter (`notElem` list) (words text)
+        rm text = 
+          unwords $ filter (`notElem` ws) (words text)
 

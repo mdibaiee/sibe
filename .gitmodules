@@ -4,3 +4,6 @@
 [submodule "examples/notMNIST"]
 	path = examples/notMNIST
 	url = git@github.com:mdibaiee/notMNIST
+[submodule "examples/blogs-corpus"]
+	path = examples/blogs-corpus
+	url = git@github.com:mdibaiee/blogs-corpus

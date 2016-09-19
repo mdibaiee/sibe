@@ -14,6 +14,7 @@ module Sibe.Word2Vec
     import Data.Default.Class
     import Data.Function (on)
     import Control.Monad
+    import System.Random
 
     data W2VMethod = SkipGram | CBOW
     data Word2Vec = Word2Vec { docs :: [String]
@@ -27,8 +28,9 @@ module Sibe.Word2Vec
                      }
 
     word2vec w2v session = do
+      seed <- newStdGen
       let s = session { training = trainingData
-                      , network = randomNetwork 0 (-1, 1) v [(dimensions w2v, (id, one))] (v, (softmax, one))
+                      , network = randomNetwork 0 (-1, 1) v [(dimensions w2v, (id, one))] (v, (softmax, crossEntropy'))
                       }
 
       when (debug s) $ do
