@@ -16,19 +16,28 @@ module Sibe.Word2Vec
     import Control.Monad
     import System.Random
 
+    import Graphics.Rendering.Chart as Chart
+    import Graphics.Rendering.Chart.Backend.Cairo
+    import Control.Lens
+
     data W2VMethod = SkipGram | CBOW
     data Word2Vec = Word2Vec { docs :: [String]
                              , window :: Int
                              , dimensions :: Int
                              , method :: W2VMethod
+                             , w2vChartName :: String
+                             , w2vDrawChart :: Bool
                              }
     instance Default Word2Vec where
       def = Word2Vec { docs = []
                      , window = 2
+                     , w2vChartName = "w2v.png"
+                     , w2vDrawChart = False
                      }
 
     word2vec w2v session = do
       seed <- newStdGen
+
       let s = session { training = trainingData
                       , network = randomNetwork 0 (-1, 1) v [(dimensions w2v, (id, one))] (v, (softmax, crossEntropy'))
                       }
@@ -48,6 +57,26 @@ module Sibe.Word2Vec
       let (hidden@(Layer biases nodes _) :- _) = network newses
       -- run words through the hidden layer alone to get the word vector
       let computedVocVec = map (\(w, v) -> (w, runLayer' v hidden)) vocvec
+
+      when (w2vDrawChart w2v) $ do
+        let mat = fromColumns . map snd $ computedVocVec
+            (u, s, v) = svd mat
+            cut = subMatrix (0, 0) (2, cols mat)
+            diagS = diagRect 0 (V.take 2 s) (rows mat) (cols mat)
+
+            twoDimensions = cut $ u <> diagS <> tr v
+            textData = zipWith (\s l -> (V.head l, V.last l, s)) (map fst computedVocVec) (toColumns twoDimensions)
+
+            chart = toRenderable layout
+              where
+                textP  = plot_annotation_values .~ textData
+                      $ def
+                layout = layout_title .~ "word vectors"
+                      $ layout_plots .~ [toPlot textP]
+                      $ def
+                    
+        renderableToFile def (w2vChartName w2v) chart
+        return ()
 
       return (computedVocVec, vocvec)
       where

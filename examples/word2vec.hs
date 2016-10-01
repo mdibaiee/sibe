@@ -42,28 +42,25 @@ module Main where
 
     let ds = ["the king loves the queen", "the queen loves the king",
               "the dwarf hates the king", "the queen hates the dwarf",
-              "the dwarf poisons the king", "the dwarf poisons the queen"]
+              "the dwarf poisons the king", "the dwarf poisons the queen",
+              "the man loves the woman", "the woman loves the man",
+              "the thief hates the man", "the woman hates the thief",
+              "the thief robs the man", "the thief robs the woman"]
 
-    let session = def { learningRate = 1e-1
+    let session = def { learningRate = 5e-1
                       , batchSize = 1
-                      , epochs = 200
+                      , epochs = 1000
                       , debug = True
                       } :: Session
         w2v = def { docs = ds
                   , dimensions = 25
                   , method = SkipGram
                   , window = 2
+                  , w2vDrawChart = True
+                  , w2vChartName = "w2v.png"
                   } :: Word2Vec
 
-
     (computed, vocvec) <- word2vec w2v session
-    
-    mapM_ (\(w, v) -> do
-                    putStr $ w ++ ": "
-                    let similarities = map (similarity v . snd) computed
-                    let sorted = sortBy (compare `on` similarity v . snd) computed
-                    print . take 2 . drop 1 . reverse $ map fst sorted
-          ) computed
 
     return ()
 

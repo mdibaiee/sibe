@@ -26,7 +26,6 @@ module Sibe
      sigmoid',
      softmax,
      softmax',
-     sampledSoftmax,
      relu,
      relu',
      crossEntropy,
@@ -183,10 +182,10 @@ module Sibe
           sig x = 1 / max (1 + exp (-x)) 1e-10
 
       -- used for negative sampling
-      sampledSoftmax :: Int -> Vector Double -> Vector Double
-      sampledSoftmax n x = cmap (\a -> exp a / s) x
-        where
-          s = V.sum . exp $ V.take n x
+      {-sampledSoftmax :: Vector Double -> Vector Double-}
+      {-sampledSoftmax x = cmap (\a -> exp a / s) x-}
+        {-where-}
+          {-s = V.sum . exp $ x-}
 
       relu :: Vector Double -> Vector Double
       relu = cmap (max 0.1)

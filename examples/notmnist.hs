@@ -17,9 +17,6 @@ module Main where
   import System.Random.Shuffle
   import Data.Default.Class
 
-  import qualified Graphics.Rendering.Chart.Easy as Chart
-  import Graphics.Rendering.Chart.Backend.Cairo
-
   main = do
     -- random seed, you might comment this line to get real random results
     setStdGen (mkStdGen 100)
