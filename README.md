@@ -67,3 +67,31 @@ notMNIST dataset, sigmoid hidden layer, cross-entropy loss, learning rate decay 
 
 notMNIST dataset, relu hidden layer, cross-entropy loss, learning rate decay and sgd ([`notmnist.hs`](https://github.com/mdibaiee/sibe/blob/master/examples/notmnist.hs)):
 ![notMNIST](https://github.com/mdibaiee/sibe/blob/master/notmnist.png?raw=true)
+
+### Word2Vec
+
+word2vec on a very small sample text:
+
+```
+the king loves the queen
+the queen loves the king,
+the dwarf hates the king
+the queen hates the dwarf
+the dwarf poisons the king
+the dwarf poisons the queen
+the man loves the woman
+the woman loves the man,
+the thief hates the man
+the woman hates the thief
+the thief robs the man
+the thief robs the woman
+```
+
+The computed vectors are transformed to two dimensions using SVD:
+
+`king` and `queen` have a relation with `man` and `woman`, `love` and `hate` are close to each other,
+and `dwarf` and `thief` have a relation with `poisons` and `robs`, also, `dwarf` is close to `queen` and `king` while
+`thief` is closer to `man` and `woman`. `the` doesn't relate to anything.
+![word2vec results](https://raw.githubusercontent.com/mdibaiee/sibe/master/w2v.png)
+
+This is a very small dataset and I have to test it on larger datasets.
