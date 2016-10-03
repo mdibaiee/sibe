@@ -32,32 +32,32 @@ module Main where
     sws <- lines <$> readFile "examples/stopwords"
 
     -- real data, takes a lot of time to train
-    {-ds <- do-}
-        {-files <- filter ((/= "xml") . take 3 . reverse) <$> listDirectory "examples/blogs-corpus/"-}
-        {-contents <- mapM (rf . ("examples/blogs-corpus/" ++)) files-}
+    ds <- do
+        files <- filter ((/= "xml") . take 1 . reverse) <$> listDirectory "examples/blogs-corpus/"
+        contents <- mapM (rf . ("examples/blogs-corpus/" ++)) files
 
-        {-let texts = map (unwords . splitOn "&nbsp;") contents-}
-        {-let tags = ["<Blog>", "</Blog>", "<date>", "</date>", "<post>", "</post>", "&nbsp;"]-}
-        {-return $ map cleanText $ removeWords (sws ++ tags) texts-}
+        let texts = map (unwords . splitOn "&nbsp;") contents
+        let tags = ["<Blog>", "</Blog>", "<date>", "</date>", "<post>", "</post>", "&nbsp;"]
+        return $ map cleanText $ removeWords (sws ++ tags) texts
 
-    let ds = ["the king loves the queen", "the queen loves the king",
-              "the dwarf hates the king", "the queen hates the dwarf",
-              "the dwarf poisons the king", "the dwarf poisons the queen",
-              "the man loves the woman", "the woman loves the man",
-              "the thief hates the man", "the woman hates the thief",
-              "the thief robs the man", "the thief robs the woman"]
+    {-let ds = ["the king loves the queen", "the queen loves the king",-}
+              {-"the dwarf hates the king", "the queen hates the dwarf",-}
+              {-"the dwarf poisons the king", "the dwarf poisons the queen",-}
+              {-"the man loves the woman", "the woman loves the man",-}
+              {-"the thief hates the man", "the woman hates the thief",-}
+              {-"the thief robs the man", "the thief robs the woman"]-}
 
     let session = def { learningRate = 5e-1
                       , batchSize = 1
-                      , epochs = 1000
+                      , epochs = 200
                       , debug = True
                       } :: Session
         w2v = def { docs = ds
-                  , dimensions = 25
+                  , dimensions = 300
                   , method = SkipGram
                   , window = 2
                   , w2vDrawChart = True
-                  , w2vChartName = "w2v.png"
+                  , w2vChartName = "w2v-big-data.png"
                   } :: Word2Vec
 
     (computed, vocvec) <- word2vec w2v session
