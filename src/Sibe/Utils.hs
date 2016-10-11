@@ -3,6 +3,7 @@ module Sibe.Utils
   , ordNub
   , onehot
   , average
+  , pca
   ) where
     import qualified Data.Vector.Storable as V
     import qualified Data.Set as Set
@@ -26,3 +27,15 @@ module Sibe.Utils
 
     average :: Vector Double -> Vector Double
     average v = cmap (/ (V.sum v)) v
+
+    pca :: Matrix Double -> Int -> Matrix Double
+    pca m d =
+      let rs = toRows m
+          means = map (\v -> V.sum v / fromIntegral (V.length v)) rs
+          meanReduced = map (\(a, b) -> V.map (+ (negate b)) a) $ zip rs means
+          mat = fromRows meanReduced
+          
+          (u, s, v) = svd mat
+          diagS = diagRect 0 s (rows mat) (cols mat)
+
+      in u ?? (All, Take d) <> diagS ?? (Take d, Take d)

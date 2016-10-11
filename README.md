@@ -87,11 +87,27 @@ the thief robs the man
 the thief robs the woman
 ```
 
-The computed vectors are transformed to two dimensions using SVD:
+The computed vectors are transformed to two dimensions using PCA:
 
 `king` and `queen` have a relation with `man` and `woman`, `love` and `hate` are close to each other,
 and `dwarf` and `thief` have a relation with `poisons` and `robs`, also, `dwarf` is close to `queen` and `king` while
 `thief` is closer to `man` and `woman`. `the` doesn't relate to anything.
 ![word2vec results](https://raw.githubusercontent.com/mdibaiee/sibe/master/w2v.png)
 
-This is a very small dataset and I have to test it on larger datasets.
+_You can reproduce this result using these parameters:_
+```haskell
+let session = def { learningRate = 0.1
+                  , batchSize = 1
+                  , epochs = 10000
+                  , debug = True
+                  } :: Session
+    w2v = def { docs = ds
+              , dimensions = 30
+              , method = SkipGram
+              , window = 2
+              , w2vDrawChart = True
+              , w2vChartName = "w2v.png"
+              } :: Word2Vec
+```
+
+This is a very small development dataset and I have to test it on larger datasets.

@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Sibe.Word2Vec
   ( word2vec
   , Word2Vec (..)
@@ -9,7 +11,7 @@ module Sibe.Word2Vec
     import Data.Char
     import Data.Maybe
     import Data.List
-    import Numeric.LinearAlgebra hiding (find)
+    import Numeric.LinearAlgebra as H hiding (find)
     import qualified Data.Vector.Storable as V
     import Data.Default.Class
     import Data.Function (on)
@@ -59,21 +61,17 @@ module Sibe.Word2Vec
       let computedVocVec = map (\(w, v) -> (w, runLayer' v hidden)) vocvec
 
       when (w2vDrawChart w2v) $ do
-        let mat = fromColumns . map snd $ computedVocVec
-            (u, s, v) = svd mat
-            cut = subMatrix (0, 0) (2, cols mat)
-            diagS = diagRect 0 (V.take 2 s) (rows mat) (cols mat)
-
-            twoDimensions = cut $ u <> diagS <> tr v
-            textData = zipWith (\s l -> (V.head l, V.last l, s)) (map fst computedVocVec) (toColumns twoDimensions)
+        let m = fromRows . map snd $ computedVocVec
+            twoDimensions = pca m 2
+            textData = zipWith (\s l -> (V.head l, V.last l, s)) (map fst computedVocVec) (toRows twoDimensions)
 
             chart = toRenderable layout
               where
-                textP  = plot_annotation_values .~ textData
+                textP = plot_annotation_values .~ textData
                       $ def
                 layout = layout_title .~ "word vectors"
-                      $ layout_plots .~ [toPlot textP]
-                      $ def
+                       $ layout_plots .~ [toPlot textP]
+                       $ def
                     
         renderableToFile def (w2vChartName w2v) chart
         return ()
