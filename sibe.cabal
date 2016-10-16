@@ -1,6 +1,6 @@
 name:                sibe
-version:             0.1.0.0
-synopsis:            Initial project template from stack
+version:             0.1.0.1
+synopsis:            Machine Learning algorithms
 description:         Haskell Machine Learning
 homepage:            https://github.com/mdibaiee/sibe
 license:             GPL-3
