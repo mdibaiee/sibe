@@ -4,42 +4,42 @@ A simple Machine Learning library.
 
 ## Simple neural network
 ```haskell
-    import Numeric.Sibe
+import Numeric.Sibe
 
-    let a = (sigmoid, sigmoid') -- activation function
-        -- random network, seed 0, values between -1 and 1,
-        -- two inputs, two nodes in hidden layer and a single output
-        rnetwork = randomNetwork 0 (-1, 1) 2 [(2, a)] (1, a)
+let a = (sigmoid, sigmoid') -- activation function
+    -- random network, seed 0, values between -1 and 1,
+    -- two inputs, two nodes in hidden layer and a single output
+    rnetwork = randomNetwork 0 (-1, 1) 2 [(2, a)] (1, a)
 
-        -- inputs and labels
-        inputs = [vector [0, 1], vector [1, 0], vector [1, 1], vector [0, 0]]
-        labels = [vector [1], vector [1], vector [0], vector [0]]
+    -- inputs and labels
+    inputs = [vector [0, 1], vector [1, 0], vector [1, 1], vector [0, 0]]
+    labels = [vector [1], vector [1], vector [0], vector [0]]
 
-        -- define the session which includes parameters
-        session = def { network = rnetwork
-                      , learningRate = 0.5
-                      , epochs = 1000
-                      , training = zip inputs labels
-                      , test = zip inputs labels
-                      , drawChart = True
-                      , chartName = "nn.png" -- draws chart of loss over time
-                      } :: Session
+    -- define the session which includes parameters
+    session = def { network = rnetwork
+                  , learningRate = 0.5
+                  , epochs = 1000
+                  , training = zip inputs labels
+                  , test = zip inputs labels
+                  , drawChart = True
+                  , chartName = "nn.png" -- draws chart of loss over time
+                  } :: Session
 
-        initialCost = crossEntropy session
+    initialCost = crossEntropy session
 
-    -- run gradient descent
-    -- you can also use `sgd`, see the notmnist example
-    newsession <- run gd session
+-- run gradient descent
+-- you can also use `sgd`, see the notmnist example
+newsession <- run gd session
 
-    let results = map (`forward` newsession) inputs
-        rounded = map (map round . toList) results
+let results = map (`forward` newsession) inputs
+    rounded = map (map round . toList) results
 
-        cost = crossEntropy newsession
-    
-    putStrLn $ "- initial cost (cross-entropy): " ++ show initialCost
-    putStrLn $ "- actual result: " ++ show results
-    putStrLn $ "- rounded result: " ++ show rounded
-    putStrLn $ "- cost (cross-entropy): " ++ show cost
+    cost = crossEntropy newsession
+
+putStrLn $ "- initial cost (cross-entropy): " ++ show initialCost
+putStrLn $ "- actual result: " ++ show results
+putStrLn $ "- rounded result: " ++ show rounded
+putStrLn $ "- cost (cross-entropy): " ++ show cost
 ```
 
 
