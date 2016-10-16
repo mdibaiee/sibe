@@ -4,6 +4,8 @@ A simple Machine Learning library.
 
 ## Simple neural network
 ```haskell
+    import Numeric.Sibe
+
     let a = (sigmoid, sigmoid') -- activation function
         -- random network, seed 0, values between -1 and 1,
         -- two inputs, two nodes in hidden layer and a single output
