@@ -1,5 +1,5 @@
 name:                sibe
-version:             0.1.0.1
+version:             0.2.0.0
 synopsis:            Machine Learning algorithms
 description:         Haskell Machine Learning
 homepage:            https://github.com/mdibaiee/sibe
@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Sibe, Sibe.NaiveBayes, Sibe.NLP, Sibe.Word2Vec, Sibe.Utils
+  exposed-modules:     Numeric.Sibe, Numeric.Sibe.NaiveBayes, Numeric.Sibe.NLP, Numeric.Sibe.Word2Vec, Numeric.Sibe.Utils
   build-depends:       base >= 4.7 && < 5
                      , hmatrix
                      , random

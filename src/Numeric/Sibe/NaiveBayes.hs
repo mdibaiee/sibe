@@ -1,4 +1,4 @@
-module Sibe.NaiveBayes
+module Numeric.Sibe.NaiveBayes
   (Document(..),
    NB(..),
    initialize,
@@ -18,8 +18,8 @@ module Sibe.NaiveBayes
    removeStopwords,
   )
   where
-    import Sibe.Utils
-    import Sibe.NLP
+    import Numeric.Sibe.Utils
+    import Numeric.Sibe.NLP
     import Data.List
     import Debug.Trace
     import qualified Data.Set as Set

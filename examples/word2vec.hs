@@ -3,9 +3,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
-  import Sibe
-  import Sibe.Word2Vec
-  import Sibe.Utils
+  import Numeric.Sibe
+  import Numeric.Sibe.Word2Vec
+  import Numeric.Sibe.Utils
   import Data.Default.Class
   import qualified Data.Vector.Storable as V
   import Data.List (sortBy)

@@ -1,4 +1,4 @@
-module Sibe.NLP
+module Numeric.Sibe.NLP
   (Class,
    Document(..),
    accuracy,
@@ -13,7 +13,7 @@ module Sibe.NLP
    ngramText,
   )
   where
-    import Sibe.Utils
+    import Numeric.Sibe.Utils
     import Data.List
     import Debug.Trace
     import Data.List.Split

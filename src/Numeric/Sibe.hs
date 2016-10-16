@@ -3,7 +3,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Sibe
+module Numeric.Sibe
     (Network(..),
      Layer(..),
      Input,

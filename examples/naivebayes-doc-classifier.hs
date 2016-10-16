@@ -1,8 +1,7 @@
 module Main
   where
-    -- import Sibe
-    import Sibe.NLP
-    import Sibe.NaiveBayes
+    import Numeric.Sibe.NLP
+    import Numeric.Sibe.NaiveBayes
     import Text.Printf
     import Data.List
     import Data.Maybe

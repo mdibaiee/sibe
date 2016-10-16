@@ -1,4 +1,4 @@
-module Sibe.Utils
+module Numeric.Sibe.Utils
   ( similarity
   , ordNub
   , onehot

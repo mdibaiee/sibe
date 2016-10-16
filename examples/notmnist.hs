@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Main where
-  import Sibe
+  import Numeric.Sibe
   import Numeric.LinearAlgebra
   import Data.List
   import Debug.Trace

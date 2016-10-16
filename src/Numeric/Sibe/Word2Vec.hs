@@ -1,12 +1,12 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Sibe.Word2Vec
+module Numeric.Sibe.Word2Vec
   ( word2vec
   , Word2Vec (..)
   , W2VMethod (..)
   ) where
-    import Sibe
-    import Sibe.Utils
+    import Numeric.Sibe
+    import Numeric.Sibe.Utils
     import Debug.Trace
     import Data.Char
     import Data.Maybe
