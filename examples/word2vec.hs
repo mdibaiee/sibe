@@ -31,7 +31,7 @@ module Main where
     setStdGen (mkStdGen 100)
     sws <- lines <$> readFile "examples/stopwords"
 
-    -- real data, takes a lot of time to train
+    -- real data, currently faces a memory problem
     {-ds <- do-}
         {-files <- filter ((/= "xml") . take 1 . reverse) <$> listDirectory "examples/blogs-corpus/"-}
         {-contents <- mapM (rf . ("examples/blogs-corpus/" ++)) files-}

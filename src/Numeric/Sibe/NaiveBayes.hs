@@ -112,8 +112,8 @@ module Numeric.Sibe.NaiveBayes
           -- in realToFrac (tct * pg + 1) / realToFrac (cvoc + voc) -- uncomment to enable ngrams
           in realToFrac (tct + 1) / realToFrac (cvoc + voc)
 
-    argmax :: (Ord a) => [a] -> Int
-    argmax x = fst $ maximumBy (\(_, a) (_, b) -> a `compare` b) (zip [0..] x)
+    {-argmax :: (Ord a) => [a] -> Int-}
+    {-argmax x = fst $ maximumBy (\(_, a) (_, b) -> a `compare` b) (zip [0..] x)-}
 
     mean :: [Double] -> Double
     mean x = sum x / genericLength x
